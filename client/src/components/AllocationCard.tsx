@@ -11,6 +11,20 @@ export function AllocationCard({ allocation, regime }: AllocationCardProps) {
   const attackColor = 'oklch(0.75 0.2 145)';
   const defenseColor = 'oklch(0.8 0.15 200)';
 
+  // Get number of stocks based on regime
+  const getStockCounts = () => {
+    switch (regime) {
+      case 'bull':
+        return { attack: 25, defense: 7 };
+      case 'bear':
+        return { attack: 5, defense: 3 };
+      default:
+        return { attack: 10, defense: 5 };
+    }
+  };
+
+  const stockCounts = getStockCounts();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,24 +47,24 @@ export function AllocationCard({ allocation, regime }: AllocationCardProps) {
         <div className="h-8 rounded-lg overflow-hidden flex">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${allocation.attackRatio}%` }}
+            animate={{ width: `${allocation.aggressive}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="flex items-center justify-center"
             style={{ backgroundColor: attackColor }}
           >
             <span className="text-xs font-mono font-bold text-background">
-              {allocation.attackRatio}%
+              {allocation.aggressive}%
             </span>
           </motion.div>
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${allocation.defenseRatio}%` }}
+            animate={{ width: `${allocation.defensive}%` }}
             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
             className="flex items-center justify-center"
             style={{ backgroundColor: defenseColor }}
           >
             <span className="text-xs font-mono font-bold text-background">
-              {allocation.defenseRatio}%
+              {allocation.defensive}%
             </span>
           </motion.div>
         </div>
@@ -68,13 +82,13 @@ export function AllocationCard({ allocation, regime }: AllocationCardProps) {
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">配分比率</span>
               <span className="font-mono font-bold" style={{ color: attackColor }}>
-                {allocation.attackRatio}%
+                {allocation.aggressive}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">銘柄数</span>
               <span className="font-mono font-bold text-foreground">
-                {allocation.attackStocks}銘柄
+                {stockCounts.attack}銘柄
               </span>
             </div>
             <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
@@ -93,13 +107,13 @@ export function AllocationCard({ allocation, regime }: AllocationCardProps) {
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">配分比率</span>
               <span className="font-mono font-bold" style={{ color: defenseColor }}>
-                {allocation.defenseRatio}%
+                {allocation.defensive}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">ETF数</span>
               <span className="font-mono font-bold text-foreground">
-                {allocation.defenseStocks}銘柄
+                {stockCounts.defense}銘柄
               </span>
             </div>
             <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
@@ -112,19 +126,19 @@ export function AllocationCard({ allocation, regime }: AllocationCardProps) {
       {/* Regime-specific Note */}
       <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
         <p className="text-xs text-muted-foreground">
-          {regime === 'BULL' && (
+          {regime === 'bull' && (
             <>
               <span className="font-semibold text-[oklch(0.75_0.2_145)]">好況期</span>
               の判定により、攻撃型への配分を増やしリターンを追求します。
             </>
           )}
-          {regime === 'BEAR' && (
+          {regime === 'bear' && (
             <>
               <span className="font-semibold text-[oklch(0.65_0.25_25)]">不況期</span>
               の判定により、防御型への配分を増やしリスクを抑制します。
             </>
           )}
-          {regime === 'NEUTRAL' && (
+          {regime === 'neutral' && (
             <>
               <span className="font-semibold text-[oklch(0.7_0.15_220)]">中立期</span>
               の判定により、バランスの取れた配分を維持します。

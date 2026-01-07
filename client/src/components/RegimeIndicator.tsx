@@ -19,7 +19,7 @@ export function RegimeIndicator({
 }: RegimeIndicatorProps) {
   const getRegimeConfig = () => {
     switch (regime) {
-      case 'BULL':
+      case 'bull':
         return {
           icon: TrendingUp,
           color: 'oklch(0.75 0.2 145)',
@@ -27,8 +27,9 @@ export function RegimeIndicator({
           borderColor: 'oklch(0.75 0.2 145 / 0.3)',
           message: '市場は上昇トレンドにあります',
           recommendation: '攻撃的なポジションを推奨',
+          display: 'BULL',
         };
-      case 'BEAR':
+      case 'bear':
         return {
           icon: TrendingDown,
           color: 'oklch(0.65 0.25 25)',
@@ -36,6 +37,7 @@ export function RegimeIndicator({
           borderColor: 'oklch(0.65 0.25 25 / 0.3)',
           message: '市場は下降トレンドの兆候があります',
           recommendation: '防御的なポジションを推奨',
+          display: 'BEAR',
         };
       default:
         return {
@@ -45,6 +47,7 @@ export function RegimeIndicator({
           borderColor: 'oklch(0.7 0.15 220 / 0.3)',
           message: '市場は方向感が定まっていません',
           recommendation: 'バランスの取れたポジションを推奨',
+          display: 'NEUTRAL',
         };
     }
   };
@@ -90,7 +93,7 @@ export function RegimeIndicator({
                   className="text-3xl font-bold font-mono"
                   style={{ color: config.color }}
                 >
-                  {regime}
+                  {config.display}
                 </h2>
                 <span className="text-xl text-muted-foreground">-</span>
                 <span className="text-xl font-semibold text-foreground">

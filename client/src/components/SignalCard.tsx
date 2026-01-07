@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, CheckCircle2, XCircle } from 'lucide-react';
-import { BullSignal, BearSignal } from '@/hooks/useMarketSignals';
+import { Signal } from '@/hooks/useMarketSignals';
 
 interface SignalCardProps {
   title: string;
   subtitle: string;
-  signals: (BullSignal | BearSignal)[];
+  signals: Signal[];
   type: 'bull' | 'bear';
   activeCount: number;
   totalCount: number;
@@ -50,9 +50,7 @@ export function SignalCard({ title, subtitle, signals, type, activeCount, totalC
       {/* Signals List */}
       <div className="space-y-2">
         {signals.map((signal, index) => {
-          const isActive = isBull 
-            ? signal.status === 'bull' 
-            : signal.status === 'bear';
+          const isActive = signal.active;
           
           return (
             <motion.div
@@ -77,7 +75,7 @@ export function SignalCard({ title, subtitle, signals, type, activeCount, totalC
                     {signal.name}
                   </p>
                   <p className="text-xs text-muted-foreground font-mono">
-                    {signal.description}
+                    {signal.value}
                   </p>
                 </div>
               </div>

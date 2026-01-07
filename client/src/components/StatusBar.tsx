@@ -21,17 +21,25 @@ export function StatusBar({
 }: StatusBarProps) {
   const getRegimeColor = () => {
     switch (regime) {
-      case 'BULL': return 'text-[oklch(0.75_0.2_145)]';
-      case 'BEAR': return 'text-[oklch(0.65_0.25_25)]';
+      case 'bull': return 'text-[oklch(0.75_0.2_145)]';
+      case 'bear': return 'text-[oklch(0.65_0.25_25)]';
       default: return 'text-[oklch(0.7_0.15_220)]';
     }
   };
 
   const getRegimeBgColor = () => {
     switch (regime) {
-      case 'BULL': return 'bg-[oklch(0.75_0.2_145)]/10 border-[oklch(0.75_0.2_145)]/30';
-      case 'BEAR': return 'bg-[oklch(0.65_0.25_25)]/10 border-[oklch(0.65_0.25_25)]/30';
+      case 'bull': return 'bg-[oklch(0.75_0.2_145)]/10 border-[oklch(0.75_0.2_145)]/30';
+      case 'bear': return 'bg-[oklch(0.65_0.25_25)]/10 border-[oklch(0.65_0.25_25)]/30';
       default: return 'bg-[oklch(0.7_0.15_220)]/10 border-[oklch(0.7_0.15_220)]/30';
+    }
+  };
+
+  const getRegimeDisplay = () => {
+    switch (regime) {
+      case 'bull': return 'BULL';
+      case 'bear': return 'BEAR';
+      default: return 'NEUTRAL';
     }
   };
 
@@ -52,7 +60,7 @@ export function StatusBar({
               className={`px-3 py-1 rounded border ${getRegimeBgColor()}`}
             >
               <span className={`font-mono text-sm font-semibold ${getRegimeColor()}`}>
-                {regime} - {regimeJapanese}
+                {getRegimeDisplay()} - {regimeJapanese}
               </span>
             </motion.div>
           </div>

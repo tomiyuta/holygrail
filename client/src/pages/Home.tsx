@@ -7,7 +7,8 @@
  */
 
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Briefcase, History } from 'lucide-react';
+import { Link } from 'wouter';
 import { useMarketSignals } from '@/hooks/useMarketSignals';
 import { StatusBar } from '@/components/StatusBar';
 import { RegimeIndicator } from '@/components/RegimeIndicator';
@@ -71,12 +72,30 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            市場環境適応型ポートフォリオ提案システム
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            好況・不況シグナルに基づいて市場環境を判定し、最適なポートフォリオ構成を提案します
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                市場環境適応型ポートフォリオ提案システム
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                好況・不況シグナルに基づいて市場環境を判定し、最適なポートフォリオ構成を提案します
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/portfolio">
+                <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+                  <Briefcase className="w-4 h-4" />
+                  <span className="text-sm font-medium">銘柄リスト</span>
+                </button>
+              </Link>
+              <Link href="/history">
+                <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+                  <History className="w-4 h-4" />
+                  <span className="text-sm font-medium">履歴</span>
+                </button>
+              </Link>
+            </div>
+          </div>
         </motion.div>
 
         {/* Main Grid */}
