@@ -7,7 +7,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, Briefcase, History, BarChart3, TrendingUp, ArrowRight } from 'lucide-react';
+import { Loader2, AlertCircle, Briefcase, History, BarChart3, TrendingUp, ArrowRight, FlaskConical } from 'lucide-react';
 import { Link } from 'wouter';
 import { useMarketSignals } from '@/hooks/useMarketSignals';
 import { StatusBar } from '@/components/StatusBar';
@@ -98,6 +98,12 @@ export default function Home() {
                 <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-lg shadow-emerald-600/20">
                   <BarChart3 className="w-4 h-4" />
                   <span className="text-sm font-semibold">パフォーマンス</span>
+                </button>
+              </Link>
+              <Link href="/backtest">
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors shadow-lg shadow-purple-600/20">
+                  <FlaskConical className="w-4 h-4" />
+                  <span className="text-sm font-semibold">バックテスト</span>
                 </button>
               </Link>
             </div>

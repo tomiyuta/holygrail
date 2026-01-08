@@ -19,6 +19,11 @@ import {
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { getAllPerformanceData } from "./performanceData";
+import {
+  getAvailableDates,
+  runBacktest,
+  getStocksForDate,
+} from "./backtestService";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -94,7 +99,11 @@ export const appRouter = router({
     /**
      * Get portfolio recommendations based on current market regime
      */
-    getRecommendations: publicProcedure.query(async () => {
+    getRecommendations: publicProcedure
+      .input(z.object({
+        diversificationCount: z.number().min(3).max(10).optional(),
+      }).optional())
+      .query(async ({ input }) => {
       // First get current market regime
       const indicators = await fetchSignalIndicators();
       
@@ -104,8 +113,11 @@ export const appRouter = router({
 
       const regimeData = determineMarketRegime(indicators);
       
-      // Get portfolio recommendations
-      const recommendations = await getPortfolioRecommendations(regimeData.regime);
+      // Get portfolio recommendations with optional diversification count
+      const recommendations = await getPortfolioRecommendations(
+        regimeData.regime,
+        input?.diversificationCount
+      );
 
       // Save to database
       await savePortfolioRecommendation({
@@ -147,6 +159,47 @@ export const appRouter = router({
     getMonthlyData: publicProcedure.query(() => {
       return getAllPerformanceData();
     }),
+  }),
+
+  // Backtest router
+  backtest: router({
+    /**
+     * Get available dates for backtesting
+     */
+    getAvailableDates: publicProcedure.query(() => {
+      return getAvailableDates();
+    }),
+
+    /**
+     * Run backtest for a specific date with given diversification count
+     */
+    run: publicProcedure
+      .input(z.object({
+        date: z.string(),
+        diversificationCount: z.number().min(3).max(10).default(5),
+      }))
+      .query(({ input }) => {
+        const result = runBacktest(input.date, input.diversificationCount);
+        if (!result) {
+          throw new Error("指定された日付のデータが見つかりません");
+        }
+        return result;
+      }),
+
+    /**
+     * Get all stocks for a specific date
+     */
+    getStocks: publicProcedure
+      .input(z.object({
+        date: z.string(),
+      }))
+      .query(({ input }) => {
+        const stocks = getStocksForDate(input.date);
+        if (!stocks) {
+          throw new Error("指定された日付のデータが見つかりません");
+        }
+        return stocks;
+      }),
   }),
 
   // Alert subscription router

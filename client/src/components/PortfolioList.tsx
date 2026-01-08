@@ -13,13 +13,17 @@ interface Holding {
 
 interface PortfolioListProps {
   type: 'aggressive' | 'defensive';
+  diversificationCount?: number;
 }
 
-export function PortfolioList({ type }: PortfolioListProps) {
-  const { data, isLoading, error } = trpc.portfolio.getRecommendations.useQuery(undefined, {
-    staleTime: 60000, // 1 minute
-    retry: 2,
-  });
+export function PortfolioList({ type, diversificationCount }: PortfolioListProps) {
+  const { data, isLoading, error } = trpc.portfolio.getRecommendations.useQuery(
+    diversificationCount ? { diversificationCount } : undefined,
+    {
+      staleTime: 60000, // 1 minute
+      retry: 2,
+    }
+  );
 
   const isAggressive = type === 'aggressive';
   const primaryColor = isAggressive ? 'oklch(0.75 0.2 145)' : 'oklch(0.8 0.15 200)';

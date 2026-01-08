@@ -1,0 +1,804 @@
+{
+  "2025-12-31": [
+    {
+      "symbol": "SNDK",
+      "name": "Sandisk Corporation Common Stock",
+      "momentum": 4.331985624,
+      "risk": 1.171793854,
+      "price": 237.38,
+      "rank": 1
+    },
+    {
+      "symbol": "WDC",
+      "name": "Western Digital Corp.",
+      "momentum": 1.706945317,
+      "risk": 0.6528467821,
+      "price": 172.27,
+      "rank": 2
+    },
+    {
+      "symbol": "WBD",
+      "name": "Warner Bros. Discovery, Inc. Series A Common Stock",
+      "momentum": 1.62,
+      "risk": 0.4085491767,
+      "price": 28.82,
+      "rank": 3
+    },
+    {
+      "symbol": "MU",
+      "name": "Micron Technology, Inc.",
+      "momentum": 1.368547718,
+      "risk": 0.6502578078,
+      "price": 285.41,
+      "rank": 4
+    },
+    {
+      "symbol": "ALB",
+      "name": "Albemarle Corporation",
+      "momentum": 1.158730159,
+      "risk": 0.603374306,
+      "price": 141.44,
+      "rank": 5
+    },
+    {
+      "symbol": "TER",
+      "name": "Teradyne, Inc. Common Stock",
+      "momentum": 1.095258714,
+      "risk": 0.6371521024,
+      "price": 193.56,
+      "rank": 6
+    },
+    {
+      "symbol": "APP",
+      "name": "Applovin Corporation Class A Common Stock",
+      "momentum": 0.967185356,
+      "risk": 0.6097249796,
+      "price": 673.82,
+      "rank": 7
+    },
+    {
+      "symbol": "STX",
+      "name": "Seagate Technology Holdings PLC Ordinary Shares (Ireland)",
+      "momentum": 0.8987175951,
+      "risk": 0.6922103133,
+      "price": 275.39,
+      "rank": 8
+    },
+    {
+      "symbol": "FIX",
+      "name": "Comfort Systems USA, Inc.",
+      "momentum": 0.7991479354,
+      "risk": 0.5879246897,
+      "price": 933.29,
+      "rank": 9
+    },
+    {
+      "symbol": "LRCX",
+      "name": "Lam Research Corp",
+      "momentum": 0.785915493,
+      "risk": 0.4908130711,
+      "price": 171.18,
+      "rank": 10
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc. Class A Common Stock",
+      "momentum": 0.7830693859,
+      "risk": 0.3000591433,
+      "price": 313.0,
+      "rank": 11
+    },
+    {
+      "symbol": "GOOG",
+      "name": "Alphabet Inc. Class C Capital Stock",
+      "momentum": 0.7774505084,
+      "risk": 0.2935601291,
+      "price": 313.8,
+      "rank": 12
+    },
+    {
+      "symbol": "NEM",
+      "name": "Newmont Corporation",
+      "momentum": 0.6940956905,
+      "risk": 0.5116618723,
+      "price": 99.85,
+      "rank": 13
+    },
+    {
+      "symbol": "GLW",
+      "name": "Corning Incorporated",
+      "momentum": 0.6662226451,
+      "risk": 0.3871661635,
+      "price": 87.56,
+      "rank": 14
+    },
+    {
+      "symbol": "INTC",
+      "name": "Intel Corp",
+      "momentum": 0.6381798002,
+      "risk": 0.4976554693,
+      "price": 36.9,
+      "rank": 15
+    },
+    {
+      "symbol": "CHRW",
+      "name": "C.H. Robinson Worldwide, Inc.",
+      "momentum": 0.6304259635,
+      "risk": 0.4545077784,
+      "price": 160.76,
+      "rank": 16
+    },
+    {
+      "symbol": "EXPE",
+      "name": "Expedia Group, Inc. Common Stock",
+      "momentum": 0.6270962555,
+      "risk": 0.5058829665,
+      "price": 283.31,
+      "rank": 17
+    },
+    {
+      "symbol": "IVZ",
+      "name": "Invesco LTD",
+      "momentum": 0.6106683017,
+      "risk": 0.2987338401,
+      "price": 26.27,
+      "rank": 18
+    },
+    {
+      "symbol": "FSLR",
+      "name": "First Solar, Inc.",
+      "momentum": 0.5832121212,
+      "risk": 0.531735966,
+      "price": 261.23,
+      "rank": 19
+    },
+    {
+      "symbol": "AMD",
+      "name": "Advanced Micro Devices",
+      "momentum": 0.5801667527,
+      "risk": 0.7662257966,
+      "price": 214.16,
+      "rank": 20
+    },
+    {
+      "symbol": "GM",
+      "name": "General Motors Company",
+      "momentum": 0.5629444551,
+      "risk": 0.3890419473,
+      "price": 81.32,
+      "rank": 21
+    },
+    {
+      "symbol": "CMI",
+      "name": "Cummins Inc.",
+      "momentum": 0.541679251,
+      "risk": 0.3083055815,
+      "price": 510.45,
+      "rank": 22
+    },
+    {
+      "symbol": "TPR",
+      "name": "Tapestry, Inc. Common Stock",
+      "momentum": 0.4742125303,
+      "risk": 0.3747495666,
+      "price": 127.77,
+      "rank": 23
+    },
+    {
+      "symbol": "CAT",
+      "name": "Caterpillar Inc.",
+      "momentum": 0.4587980647,
+      "risk": 0.3707585869,
+      "price": 572.87,
+      "rank": 24
+    },
+    {
+      "symbol": "REGN",
+      "name": "Regeneron Pharmaceuticals Inc",
+      "momentum": 0.4463703482,
+      "risk": 0.3694384876,
+      "price": 771.87,
+      "rank": 25
+    },
+    {
+      "symbol": "INCY",
+      "name": "Incyte Genomics Inc",
+      "momentum": 0.4395860662,
+      "risk": 0.3268431643,
+      "price": 98.77,
+      "rank": 26
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla, Inc. Common Stock",
+      "momentum": 0.4385055817,
+      "risk": 0.470933159,
+      "price": 449.72,
+      "rank": 27
+    },
+    {
+      "symbol": "DAL",
+      "name": "Delta Air Lines, Inc.",
+      "momentum": 0.411142741,
+      "risk": 0.3863181455,
+      "price": 69.4,
+      "rank": 28
+    },
+    {
+      "symbol": "AMAT",
+      "name": "Applied Materials Inc",
+      "momentum": 0.4071620216,
+      "risk": 0.4139327937,
+      "price": 256.99,
+      "rank": 29
+    },
+    {
+      "symbol": "APH",
+      "name": "Amphenol Corporation",
+      "momentum": 0.3969402522,
+      "risk": 0.3442926727,
+      "price": 135.14,
+      "rank": 30
+    },
+    {
+      "symbol": "UAL",
+      "name": "United Airlines Holdings, Inc. Common Stock",
+      "momentum": 0.3932220284,
+      "risk": 0.4240083715,
+      "price": 111.82,
+      "rank": 31
+    },
+    {
+      "symbol": "HII",
+      "name": "Huntington Ingalls Industries, Inc.",
+      "momentum": 0.3902538735,
+      "risk": 0.3100106492,
+      "price": 340.07,
+      "rank": 32
+    },
+    {
+      "symbol": "LLY",
+      "name": "Eli Lilly & Co.",
+      "momentum": 0.3840051513,
+      "risk": 0.2610496193,
+      "price": 1074.68,
+      "rank": 33
+    },
+    {
+      "symbol": "IQV",
+      "name": "IQVIA Holdings Inc.",
+      "momentum": 0.3816120135,
+      "risk": 0.2157897083,
+      "price": 225.41,
+      "rank": 34
+    },
+    {
+      "symbol": "LVS",
+      "name": "Las Vegas Sands Corp.",
+      "momentum": 0.3706043378,
+      "risk": 0.4121089181,
+      "price": 65.09,
+      "rank": 35
+    },
+    {
+      "symbol": "KLAC",
+      "name": "KLA Corporation Common Stock",
+      "momentum": 0.3680098175,
+      "risk": 0.4104062797,
+      "price": 1215.08,
+      "rank": 36
+    },
+    {
+      "symbol": "TMO",
+      "name": "Thermo Fisher Scientific, Inc.",
+      "momentum": 0.3634117647,
+      "risk": 0.1819207533,
+      "price": 579.45,
+      "rank": 37
+    },
+    {
+      "symbol": "BIIB",
+      "name": "Biogen Inc. Common Stock",
+      "momentum": 0.3537692308,
+      "risk": 0.258365906,
+      "price": 175.99,
+      "rank": 38
+    },
+    {
+      "symbol": "VTRS",
+      "name": "Viatris Inc. Common Stock",
+      "momentum": 0.3532608696,
+      "risk": 0.3044621223,
+      "price": 12.45,
+      "rank": 39
+    },
+    {
+      "symbol": "PLTR",
+      "name": "Palantir Technologies Inc. Class A Common Stock",
+      "momentum": 0.3520194721,
+      "risk": 0.5120530262,
+      "price": 177.75,
+      "rank": 40
+    },
+    {
+      "symbol": "C",
+      "name": "Citigroup Inc.",
+      "momentum": 0.3491733148,
+      "risk": 0.2370802487,
+      "price": 116.69,
+      "rank": 41
+    },
+    {
+      "symbol": "TEL",
+      "name": "TE Connectivity plc",
+      "momentum": 0.3375859839,
+      "risk": 0.2942738528,
+      "price": 227.51,
+      "rank": 42
+    },
+    {
+      "symbol": "DD",
+      "name": "DuPont de Nemours, Inc. Common Stock",
+      "momentum": 0.3364583853,
+      "risk": 0.3145804439,
+      "price": 40.2,
+      "rank": 43
+    },
+    {
+      "symbol": "ANET",
+      "name": "Arista Networks",
+      "momentum": 0.3354056258,
+      "risk": 0.4592311184,
+      "price": 131.03,
+      "rank": 44
+    },
+    {
+      "symbol": "ROST",
+      "name": "Ross Stores Inc",
+      "momentum": 0.3305266268,
+      "risk": 0.2400343272,
+      "price": 180.14,
+      "rank": 45
+    },
+    {
+      "symbol": "CRH",
+      "name": "CRH Public Limited Company",
+      "momentum": 0.3266716275,
+      "risk": 0.2573569138,
+      "price": 124.8,
+      "rank": 46
+    },
+    {
+      "symbol": "JNJ",
+      "name": "Johnson & Johnson",
+      "momentum": 0.3266025641,
+      "risk": 0.1510596084,
+      "price": 206.95,
+      "rank": 47
+    },
+    {
+      "symbol": "AES",
+      "name": "AES Corporation",
+      "momentum": 0.3216589862,
+      "risk": 0.2892689246,
+      "price": 14.34,
+      "rank": 48
+    },
+    {
+      "symbol": "AVGO",
+      "name": "Broadcom Inc. Common Stock",
+      "momentum": 0.3110345089,
+      "risk": 0.5199945931,
+      "price": 346.1,
+      "rank": 49
+    },
+    {
+      "symbol": "HAL",
+      "name": "Halliburton Company",
+      "momentum": 0.3089393238,
+      "risk": 0.3790013378,
+      "price": 28.26,
+      "rank": 50
+    },
+    {
+      "symbol": "FOXA",
+      "name": "Fox Corporation Class A Common Stock",
+      "momentum": 0.3048214286,
+      "risk": 0.2399927958,
+      "price": 73.07,
+      "rank": 51
+    },
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "momentum": 0.3013259298,
+      "risk": 0.1751937193,
+      "price": 271.86,
+      "rank": 52
+    },
+    {
+      "symbol": "RL",
+      "name": "Ralph Lauren Corporation",
+      "momentum": 0.3004670663,
+      "risk": 0.2807045533,
+      "price": 353.61,
+      "rank": 53
+    },
+    {
+      "symbol": "GEV",
+      "name": "GE Vernova Inc.",
+      "momentum": 0.3004297823,
+      "risk": 0.5842501788,
+      "price": 653.57,
+      "rank": 54
+    },
+    {
+      "symbol": "CRL",
+      "name": "Charles River Laboratories International, Inc.",
+      "momentum": 0.2952405688,
+      "risk": 0.3406485694,
+      "price": 199.48,
+      "rank": 55
+    },
+    {
+      "symbol": "EA",
+      "name": "Electronic Arts Inc",
+      "momentum": 0.2898806894,
+      "risk": 0.03006845305,
+      "price": 204.33,
+      "rank": 56
+    },
+    {
+      "symbol": "STLD",
+      "name": "Steel Dynamics Inc",
+      "momentum": 0.2875161462,
+      "risk": 0.300021321,
+      "price": 169.45,
+      "rank": 57
+    },
+    {
+      "symbol": "JBHT",
+      "name": "JB Hunt Transport Services Inc",
+      "momentum": 0.2857426398,
+      "risk": 0.5175916748,
+      "price": 194.34,
+      "rank": 58
+    },
+    {
+      "symbol": "MRK",
+      "name": "Merck & Co., Inc.",
+      "momentum": 0.282719961,
+      "risk": 0.2644753773,
+      "price": 105.26,
+      "rank": 59
+    },
+    {
+      "symbol": "ULTA",
+      "name": "Ulta Beauty, Inc. Common Stock",
+      "momentum": 0.2779021629,
+      "risk": 0.3431611203,
+      "price": 605.01,
+      "rank": 60
+    },
+    {
+      "symbol": "RTX",
+      "name": "RTX Corporation",
+      "momentum": 0.2766253654,
+      "risk": 0.2565297447,
+      "price": 183.4,
+      "rank": 61
+    },
+    {
+      "symbol": "BK",
+      "name": "Bank of New York Mellon Corporation",
+      "momentum": 0.276555971,
+      "risk": 0.1767799717,
+      "price": 116.09,
+      "rank": 62
+    },
+    {
+      "symbol": "APA",
+      "name": "APA Corporation Common Stock",
+      "momentum": 0.2680145153,
+      "risk": 0.4467571377,
+      "price": 24.46,
+      "rank": 63
+    },
+    {
+      "symbol": "CFG",
+      "name": "Citizens Financial Group, Inc.",
+      "momentum": 0.2645594284,
+      "risk": 0.2778682269,
+      "price": 58.41,
+      "rank": 64
+    },
+    {
+      "symbol": "FOX",
+      "name": "Fox Corporation Class B Common Stock",
+      "momentum": 0.259798215,
+      "risk": 0.2421867695,
+      "price": 64.93,
+      "rank": 65
+    },
+    {
+      "symbol": "EXPD",
+      "name": "Expeditors International of Washington, Inc.",
+      "momentum": 0.2586367092,
+      "risk": 0.3119733316,
+      "price": 149.01,
+      "rank": 66
+    },
+    {
+      "symbol": "CAH",
+      "name": "Cardinal Health, Inc.",
+      "momentum": 0.2580348944,
+      "risk": 0.3466090431,
+      "price": 205.5,
+      "rank": 67
+    },
+    {
+      "symbol": "MS",
+      "name": "Morgan Stanley",
+      "momentum": 0.2536101402,
+      "risk": 0.2331417979,
+      "price": 177.53,
+      "rank": 68
+    },
+    {
+      "symbol": "IDXX",
+      "name": "Idexx Laboratories Inc",
+      "momentum": 0.2494090271,
+      "risk": 0.3799316421,
+      "price": 676.53,
+      "rank": 69
+    },
+    {
+      "symbol": "CVNA",
+      "name": "Carvana Co.",
+      "momentum": 0.2482844297,
+      "risk": 0.6682470482,
+      "price": 422.02,
+      "rank": 70
+    },
+    {
+      "symbol": "PH",
+      "name": "Parker-Hannifin Corporation",
+      "momentum": 0.2469109532,
+      "risk": 0.2491180039,
+      "price": 878.96,
+      "rank": 71
+    },
+    {
+      "symbol": "GE",
+      "name": "GE Aerospace",
+      "momentum": 0.2420564516,
+      "risk": 0.2484483146,
+      "price": 308.03,
+      "rank": 72
+    },
+    {
+      "symbol": "GS",
+      "name": "Goldman Sachs Group Inc.",
+      "momentum": 0.2401241535,
+      "risk": 0.2504069266,
+      "price": 879.0,
+      "rank": 73
+    },
+    {
+      "symbol": "HOOD",
+      "name": "Robinhood Markets, Inc. Class A Common Stock",
+      "momentum": 0.2394520548,
+      "risk": 0.6914583429,
+      "price": 113.1,
+      "rank": 74
+    },
+    {
+      "symbol": "KEYS",
+      "name": "Keysight Technologies, Inc.",
+      "momentum": 0.2383593369,
+      "risk": 0.3568844294,
+      "price": 203.19,
+      "rank": 75
+    },
+    {
+      "symbol": "WST",
+      "name": "West Pharmaceutical Services, Inc.",
+      "momentum": 0.2338116592,
+      "risk": 0.3479809956,
+      "price": 275.14,
+      "rank": 76
+    },
+    {
+      "symbol": "VTR",
+      "name": "Ventas, Inc.",
+      "momentum": 0.2325581395,
+      "risk": 0.1985947359,
+      "price": 77.38,
+      "rank": 77
+    },
+    {
+      "symbol": "EL",
+      "name": "The Estee Lauder Companies Inc. Class A",
+      "momentum": 0.2308415609,
+      "risk": 0.3906836105,
+      "price": 104.72,
+      "rank": 78
+    },
+    {
+      "symbol": "WELL",
+      "name": "Welltower Inc.",
+      "momentum": 0.2286357318,
+      "risk": 0.2040000034,
+      "price": 185.61,
+      "rank": 79
+    },
+    {
+      "symbol": "DAY",
+      "name": "Dayforce, Inc.",
+      "momentum": 0.2275470359,
+      "risk": 0.02867556342,
+      "price": 69.16,
+      "rank": 80
+    },
+    {
+      "symbol": "FDX",
+      "name": "FedEx Corporation",
+      "momentum": 0.2261131627,
+      "risk": 0.242806391,
+      "price": 288.86,
+      "rank": 81
+    },
+    {
+      "symbol": "LUV",
+      "name": "Southwest Airlines Co.",
+      "momentum": 0.2260456838,
+      "risk": 0.3645842907,
+      "price": 41.33,
+      "rank": 82
+    },
+    {
+      "symbol": "TJX",
+      "name": "TJX Companies, Inc. (The)",
+      "momentum": 0.2250578196,
+      "risk": 0.1595023286,
+      "price": 153.61,
+      "rank": 83
+    },
+    {
+      "symbol": "AIZ",
+      "name": "Assurant, Inc.",
+      "momentum": 0.2201114488,
+      "risk": 0.1872278398,
+      "price": 240.85,
+      "rank": 84
+    },
+    {
+      "symbol": "MPWR",
+      "name": "Monolithic Power Systems, Inc.",
+      "momentum": 0.2197176654,
+      "risk": 0.4714405816,
+      "price": 906.36,
+      "rank": 85
+    },
+    {
+      "symbol": "NVDA",
+      "name": "Nvidia Corp",
+      "momentum": 0.2191136096,
+      "risk": 0.3679029832,
+      "price": 186.5,
+      "rank": 86
+    },
+    {
+      "symbol": "DLTR",
+      "name": "Dollar Tree Inc.",
+      "momentum": 0.219007036,
+      "risk": 0.3738191447,
+      "price": 123.01,
+      "rank": 87
+    },
+    {
+      "symbol": "SYF",
+      "name": "SYNCHRONY FINANCIAL",
+      "momentum": 0.2183119159,
+      "risk": 0.2581250251,
+      "price": 83.43,
+      "rank": 88
+    },
+    {
+      "symbol": "NUE",
+      "name": "Nucor Corporation",
+      "momentum": 0.2082222222,
+      "risk": 0.2996322867,
+      "price": 163.11,
+      "rank": 89
+    },
+    {
+      "symbol": "MNST",
+      "name": "Monster Beverage Corporation",
+      "momentum": 0.2081626221,
+      "risk": 0.2279724477,
+      "price": 76.67,
+      "rank": 90
+    },
+    {
+      "symbol": "HCA",
+      "name": "HCA Healthcare, Inc.",
+      "momentum": 0.2064189364,
+      "risk": 0.2474506363,
+      "price": 466.86,
+      "rank": 91
+    },
+    {
+      "symbol": "ABBV",
+      "name": "ABBVIE INC.",
+      "momentum": 0.2044807591,
+      "risk": 0.2270095984,
+      "price": 228.49,
+      "rank": 92
+    },
+    {
+      "symbol": "STT",
+      "name": "State Street Corporation",
+      "momentum": 0.2008749884,
+      "risk": 0.2339410718,
+      "price": 129.01,
+      "rank": 93
+    },
+    {
+      "symbol": "PLD",
+      "name": "PROLOGIS, INC.",
+      "momentum": 0.1959902567,
+      "risk": 0.2074012127,
+      "price": 127.66,
+      "rank": 94
+    },
+    {
+      "symbol": "TKO",
+      "name": "TKO Group Holdings, Inc.",
+      "momentum": 0.1908831909,
+      "risk": 0.2583056575,
+      "price": 209.0,
+      "rank": 95
+    },
+    {
+      "symbol": "WYNN",
+      "name": "Wynn Resorts Ltd",
+      "momentum": 0.1764763395,
+      "risk": 0.3816319955,
+      "price": 120.33,
+      "rank": 96
+    },
+    {
+      "symbol": "LHX",
+      "name": "L3Harris Technologies, Inc.",
+      "momentum": 0.1709077856,
+      "risk": 0.2479618084,
+      "price": 293.57,
+      "rank": 97
+    },
+    {
+      "symbol": "HPE",
+      "name": "Hewlett Packard Enterprise Company",
+      "momentum": 0.1694255112,
+      "risk": 0.4019900135,
+      "price": 24.02,
+      "rank": 98
+    },
+    {
+      "symbol": "HWM",
+      "name": "Howmet Aerospace Inc.",
+      "momentum": 0.1690711068,
+      "risk": 0.2583663074,
+      "price": 205.02,
+      "rank": 99
+    },
+    {
+      "symbol": "UHS",
+      "name": "Universal Health Services, Inc. Class B",
+      "momentum": 0.1683815648,
+      "risk": 0.2429683637,
+      "price": 218.02,
+      "rank": 100
+    }
+  ]
+}

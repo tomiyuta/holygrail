@@ -43,21 +43,27 @@ export interface PortfolioSelection {
  */
 export async function selectAggressivePortfolio(
   regime: "bull" | "bear" | "neutral",
-  maxSymbols: number = 100  // Increased to cover more of the Seihai universe
+  maxSymbols: number = 100,  // Increased to cover more of the Seihai universe
+  customDiversificationCount?: number  // User-specified diversification count (3-10)
 ): Promise<PortfolioSelection> {
-  // Determine number of holdings based on regime
-  // Original Seihai uses 5 stocks as default
+  // Use custom diversification count if provided, otherwise use regime-based default
   let targetHoldings: number;
-  switch (regime) {
-    case "bull":
-      targetHoldings = 5;  // Match original Seihai default
-      break;
-    case "bear":
-      targetHoldings = 3;
-      break;
-    case "neutral":
-    default:
-      targetHoldings = 5;
+  if (customDiversificationCount !== undefined) {
+    // Clamp to valid range (3-10)
+    targetHoldings = Math.max(3, Math.min(10, customDiversificationCount));
+  } else {
+    // Original Seihai uses 5 stocks as default
+    switch (regime) {
+      case "bull":
+        targetHoldings = 5;  // Match original Seihai default
+        break;
+      case "bear":
+        targetHoldings = 3;
+        break;
+      case "neutral":
+      default:
+        targetHoldings = 5;
+    }
   }
 
   // Fetch data for Seihai universe stocks
@@ -206,13 +212,14 @@ export async function selectDefensivePortfolio(
  * Get complete portfolio recommendations for both strategies
  */
 export async function getPortfolioRecommendations(
-  regime: "bull" | "bear" | "neutral"
+  regime: "bull" | "bear" | "neutral",
+  diversificationCount?: number  // Optional user-specified diversification count
 ): Promise<{
   aggressive: PortfolioSelection;
   defensive: PortfolioSelection;
 }> {
   const [aggressive, defensive] = await Promise.all([
-    selectAggressivePortfolio(regime),
+    selectAggressivePortfolio(regime, 100, diversificationCount),
     selectDefensivePortfolio(regime),
   ]);
 
