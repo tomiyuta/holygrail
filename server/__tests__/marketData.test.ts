@@ -31,7 +31,7 @@ describe('Market Data Service', () => {
         { adjClose: 120 },
       ];
       const momentum = calculateMomentum(prices);
-      expect(momentum).toBeCloseTo(20, 1); // 20% return
+      expect(momentum).toBeCloseTo(0.2, 2); // 20% return as decimal (0.2)
     });
 
     it('should calculate negative momentum correctly', () => {
@@ -41,7 +41,7 @@ describe('Market Data Service', () => {
         { adjClose: 80 },
       ];
       const momentum = calculateMomentum(prices);
-      expect(momentum).toBeCloseTo(-20, 1); // -20% return
+      expect(momentum).toBeCloseTo(-0.2, 2); // -20% return as decimal (-0.2)
     });
 
     it('should return 0 for insufficient data', () => {

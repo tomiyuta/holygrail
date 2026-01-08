@@ -1,15 +1,19 @@
 /**
  * Portfolio Selection Service
- * Implements aggressive (momentum) and defensive (low-volatility) stock selection
+ * Implements the original Seihai (Holy Grail) portfolio selection logic
+ * 
+ * Selection Logic:
+ * 1. Sort stocks by 6-month momentum (descending)
+ * 2. Select top N stocks based on regime
+ * 3. Calculate weights using risk-inverse weighting (1/risk)
  */
 
 import {
   fetchStockChart,
   calculateMomentum,
-  calculateVolatility,
-  SP500_TOP_SYMBOLS,
+  calculateRisk,
+  SEIHAI_SYMBOLS,
   DEFENSIVE_ETFS,
-  StockData,
 } from "./marketData";
 
 export interface PortfolioHolding {
@@ -17,7 +21,7 @@ export interface PortfolioHolding {
   name: string;
   weight: number;
   momentum?: number;
-  volatility?: number;
+  volatility?: number;  // This is actually "risk" in Seihai terminology
   category?: string;
 }
 
@@ -29,75 +33,85 @@ export interface PortfolioSelection {
 }
 
 /**
- * Select aggressive portfolio holdings based on momentum
- * Uses 6-month momentum ranking with risk-inverse weighting
+ * Select aggressive portfolio holdings based on Seihai methodology
+ * 
+ * Original Seihai Logic:
+ * 1. Calculate 6-month momentum for all stocks in universe
+ * 2. Sort by momentum (descending)
+ * 3. Select top N stocks (N = 分散数, typically 5)
+ * 4. Calculate risk-inverse weights: weight_i = (1/risk_i) / sum(1/risk_j)
  */
 export async function selectAggressivePortfolio(
   regime: "bull" | "bear" | "neutral",
-  maxSymbols: number = 50
+  maxSymbols: number = 100  // Increased to cover more of the Seihai universe
 ): Promise<PortfolioSelection> {
   // Determine number of holdings based on regime
+  // Original Seihai uses 5 stocks as default
   let targetHoldings: number;
   switch (regime) {
     case "bull":
-      targetHoldings = 25;
+      targetHoldings = 5;  // Match original Seihai default
       break;
     case "bear":
-      targetHoldings = 5;
+      targetHoldings = 3;
       break;
     case "neutral":
     default:
-      targetHoldings = 10;
+      targetHoldings = 5;
   }
 
-  // Fetch data for S&P 500 stocks (limited for performance)
-  const symbolsToFetch = SP500_TOP_SYMBOLS.slice(0, maxSymbols);
+  // Fetch data for Seihai universe stocks
+  const symbolsToFetch = SEIHAI_SYMBOLS.slice(0, maxSymbols);
   const stockDataPromises = symbolsToFetch.map(symbol => 
     fetchStockChart(symbol, "6mo", "1d")
   );
 
   const stockDataResults = await Promise.all(stockDataPromises);
   
-  // Calculate momentum and volatility for each stock
+  // Calculate momentum and risk for each stock
   const stockMetrics: {
     symbol: string;
     name: string;
-    momentum: number;
-    volatility: number;
+    momentum: number;  // 6-month return as decimal
+    risk: number;      // MaxRangePct-based risk
   }[] = [];
 
   for (const data of stockDataResults) {
     if (data && data.prices.length >= 20) {
       const momentum = calculateMomentum(data.prices);
-      const volatility = calculateVolatility(data.prices);
+      const risk = calculateRisk(data.prices);
       
-      if (volatility > 0) {
+      // Only include stocks with valid risk (avoid division by zero)
+      if (risk > 0) {
         stockMetrics.push({
           symbol: data.symbol,
           name: data.name || data.symbol,
           momentum,
-          volatility,
+          risk,
         });
       }
     }
   }
 
-  // Sort by momentum (descending) and select top N
+  // Sort by momentum (descending) - this is the key Seihai logic
   stockMetrics.sort((a, b) => b.momentum - a.momentum);
+  
+  // Select top N stocks
   const selectedStocks = stockMetrics.slice(0, targetHoldings);
 
-  // Calculate risk-inverse weights
-  const totalInverseVol = selectedStocks.reduce(
-    (sum, s) => sum + (1 / s.volatility),
+  // Calculate risk-inverse weights (original Seihai formula)
+  // weight_i = (1/risk_i) / sum(1/risk_j) * 100
+  const totalInverseRisk = selectedStocks.reduce(
+    (sum, s) => sum + (1 / s.risk),
     0
   );
 
   const holdings: PortfolioHolding[] = selectedStocks.map(stock => ({
     symbol: stock.symbol,
     name: stock.name,
-    weight: ((1 / stock.volatility) / totalInverseVol) * 100,
-    momentum: stock.momentum,
-    volatility: stock.volatility,
+    weight: ((1 / stock.risk) / totalInverseRisk) * 100,
+    momentum: stock.momentum * 100,  // Convert to percentage for display
+    volatility: stock.risk,  // Store risk as volatility for display
   }));
 
   // Sort by weight descending for display
@@ -139,12 +153,12 @@ export async function selectDefensivePortfolio(
 
   const etfDataResults = await Promise.all(etfDataPromises);
 
-  // Calculate volatility for each ETF
+  // Calculate risk for each ETF
   const etfMetrics: {
     symbol: string;
     name: string;
     category: string;
-    volatility: number;
+    risk: number;
   }[] = [];
 
   for (let i = 0; i < etfDataResults.length; i++) {
@@ -152,31 +166,31 @@ export async function selectDefensivePortfolio(
     const etfInfo = DEFENSIVE_ETFS[i];
     
     if (data && data.prices.length >= 20) {
-      const volatility = calculateVolatility(data.prices);
+      const risk = calculateRisk(data.prices);
       
-      if (volatility > 0) {
+      if (risk > 0) {
         etfMetrics.push({
           symbol: etfInfo.symbol,
           name: etfInfo.name,
           category: etfInfo.category,
-          volatility,
+          risk,
         });
       }
     }
   }
 
-  // Sort by volatility (ascending) and select bottom N
-  etfMetrics.sort((a, b) => a.volatility - b.volatility);
+  // Sort by risk (ascending) and select lowest N
+  etfMetrics.sort((a, b) => a.risk - b.risk);
   const selectedETFs = etfMetrics.slice(0, targetHoldings);
 
-  // Equal weight allocation
+  // Equal weight allocation for defensive portfolio
   const equalWeight = 100 / selectedETFs.length;
 
   const holdings: PortfolioHolding[] = selectedETFs.map(etf => ({
     symbol: etf.symbol,
     name: etf.name,
     weight: equalWeight,
-    volatility: etf.volatility,
+    volatility: etf.risk,
     category: etf.category,
   }));
 

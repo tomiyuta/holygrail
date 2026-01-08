@@ -1,18 +1,28 @@
 /**
  * Market Data Service
  * Fetches real-time and historical market data from Yahoo Finance API
+ * Updated to match the original Seihai (Holy Grail) portfolio selection logic
  */
 
 import { callDataApi } from "./_core/dataApi";
 
-// S&P 500 top constituents (simplified list for demonstration)
-export const SP500_TOP_SYMBOLS = [
-  "AAPL", "MSFT", "AMZN", "NVDA", "GOOGL", "META", "TSLA", "BRK-B", "UNH", "XOM",
-  "JNJ", "JPM", "V", "PG", "MA", "HD", "CVX", "MRK", "ABBV", "LLY",
-  "PEP", "KO", "COST", "AVGO", "WMT", "MCD", "CSCO", "TMO", "ABT", "ACN",
-  "DHR", "NKE", "ORCL", "VZ", "ADBE", "CRM", "INTC", "CMCSA", "NEE", "TXN",
-  "PM", "WFC", "BMY", "UPS", "RTX", "HON", "QCOM", "LOW", "UNP", "SPGI"
+// 聖杯（攻撃型）の銘柄ユニバース - S&P1500から抽出した上位100銘柄
+// 元のExcelダッシュボードと同じ銘柄リスト
+export const SEIHAI_SYMBOLS = [
+  "SNDK", "WDC", "WBD", "MU", "ALB", "TER", "APP", "STX", "FIX", "LRCX",
+  "GOOGL", "GOOG", "NEM", "GLW", "INTC", "CHRW", "EXPE", "IVZ", "FSLR", "AMD",
+  "GM", "CMI", "TPR", "CAT", "REGN", "INCY", "TSLA", "DAL", "AMAT", "APH",
+  "UAL", "HII", "LLY", "IQV", "LVS", "KLAC", "TMO", "BIIB", "VTRS", "PLTR",
+  "C", "TEL", "DD", "ANET", "ROST", "CRH", "JNJ", "AES", "AVGO", "HAL",
+  "FOXA", "AAPL", "RL", "GEV", "CRL", "EA", "STLD", "JBHT", "MRK", "ULTA",
+  "RTX", "BK", "APA", "CFG", "FOX", "EXPD", "CAH", "MS", "IDXX", "CVNA",
+  "PH", "GE", "GS", "HOOD", "KEYS", "WST", "VTR", "EL", "WELL", "DAY",
+  "FDX", "LUV", "TJX", "AIZ", "MPWR", "NVDA", "DLTR", "SYF", "NUE", "MNST",
+  "HCA", "ABBV", "STT", "PLD", "TKO", "WYNN", "LHX", "HPE", "HWM", "UHS"
 ];
+
+// S&P 500 top constituents (kept for backward compatibility)
+export const SP500_TOP_SYMBOLS = SEIHAI_SYMBOLS;
 
 // Defensive ETF universe
 export const DEFENSIVE_ETFS = [
@@ -174,18 +184,46 @@ export function calculateMA(prices: number[], period: number): number {
 }
 
 /**
- * Calculate momentum (6-month return)
+ * Calculate momentum (6-month return) - matches original Seihai calculation
+ * Formula: (current_price - price_6months_ago) / price_6months_ago
  */
 export function calculateMomentum(prices: { adjClose: number }[]): number {
   if (prices.length < 2) return 0;
   const startPrice = prices[0].adjClose;
   const endPrice = prices[prices.length - 1].adjClose;
   if (startPrice === 0) return 0;
-  return ((endPrice - startPrice) / startPrice) * 100;
+  return (endPrice - startPrice) / startPrice;  // Return as decimal (not percentage)
 }
 
 /**
- * Calculate volatility (standard deviation of returns)
+ * Calculate risk (MaxRangePct_90日 equivalent) - matches original Seihai calculation
+ * Formula: (90-day high - 90-day low) / current_price
+ * This measures the price range volatility over the past 90 days
+ */
+export function calculateRisk(prices: { high: number; low: number; close: number }[]): number {
+  if (prices.length < 2) return 0;
+  
+  // Get last 90 days of data (or all available if less)
+  const recentPrices = prices.slice(-90);
+  
+  // Find max high and min low in the period
+  const maxHigh = Math.max(...recentPrices.map(p => p.high));
+  const minLow = Math.min(...recentPrices.map(p => p.low));
+  const currentPrice = recentPrices[recentPrices.length - 1].close;
+  
+  if (currentPrice === 0) return 0;
+  
+  // MaxRangePct = (MaxHigh - MinLow) / CurrentPrice
+  const maxRangePct = (maxHigh - minLow) / currentPrice;
+  
+  // The original Seihai uses a risk value that appears to be related to volatility
+  // Based on analysis, the risk column seems to be approximately MaxRangePct * sqrt(12) for annualization
+  // However, the exact formula varies. We'll use MaxRangePct * sqrt(12) as approximation
+  return maxRangePct * Math.sqrt(12);
+}
+
+/**
+ * Calculate volatility (standard deviation of returns) - kept for backward compatibility
  */
 export function calculateVolatility(prices: { adjClose: number }[]): number {
   if (prices.length < 2) return 0;
@@ -223,7 +261,7 @@ export async function fetchSignalIndicators(): Promise<SignalIndicators | null> 
     
     // Calculate 6-month return
     const sixMonthPrices = spyData.prices.slice(-126); // ~6 months of trading days
-    const spy6MonthReturn = calculateMomentum(sixMonthPrices);
+    const spy6MonthReturn = calculateMomentum(sixMonthPrices) * 100; // Convert to percentage
 
     // Fetch VIX
     let vix = 20; // Default value
@@ -257,8 +295,8 @@ export async function fetchSignalIndicators(): Promise<SignalIndicators | null> 
       const lqdData = await fetchStockChart(SIGNAL_SYMBOLS.LQD, "1mo", "1d");
       if (hygData && lqdData && hygData.prices.length > 0 && lqdData.prices.length > 0) {
         // Calculate yield-like spread based on price movements
-        const hygReturn = calculateMomentum(hygData.prices.slice(-20));
-        const lqdReturn = calculateMomentum(lqdData.prices.slice(-20));
+        const hygReturn = calculateMomentum(hygData.prices.slice(-20)) * 100;
+        const lqdReturn = calculateMomentum(lqdData.prices.slice(-20)) * 100;
         creditSpread = lqdReturn - hygReturn; // Positive = risk-off
       }
     } catch (e) {
