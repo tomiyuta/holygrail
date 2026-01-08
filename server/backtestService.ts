@@ -2,9 +2,12 @@
  * Backtest Service
  * Provides historical portfolio selection based on past data
  * and allows simulation with different diversification settings
+ * 
+ * Updated to support arbitrary date selection using Yahoo Finance API
  */
 
-import backtestData from "./backtestData.json";
+import { callDataApi } from "./_core/dataApi";
+import { SEIHAI_SYMBOLS } from "./marketData";
 
 export interface BacktestStock {
   symbol: string;
@@ -29,40 +32,203 @@ export interface BacktestResult {
   diversificationCount: number;
 }
 
-// Type assertion for imported JSON
-const historicalData = backtestData as Record<string, BacktestStock[]>;
+// Yahoo Finance API response types
+interface YahooFinanceQuote {
+  open?: number[];
+  high?: number[];
+  low?: number[];
+  close?: number[];
+  volume?: number[];
+}
 
-/**
- * Get available backtest dates
- */
-export function getAvailableDates(): string[] {
-  return Object.keys(historicalData).sort();
+interface YahooFinanceAdjClose {
+  adjclose?: number[];
+}
+
+interface YahooFinanceMeta {
+  longName?: string;
+  shortName?: string;
+  regularMarketPrice?: number;
+}
+
+interface YahooFinanceResult {
+  meta: YahooFinanceMeta;
+  timestamp?: number[];
+  indicators?: {
+    quote?: YahooFinanceQuote[];
+    adjclose?: YahooFinanceAdjClose[];
+  };
+}
+
+interface YahooFinanceResponse {
+  chart?: {
+    result?: YahooFinanceResult[];
+  };
 }
 
 /**
- * Run backtest for a specific date with given diversification count
- * 
- * @param date - Target date in YYYY-MM-DD format
- * @param diversificationCount - Number of stocks to select (3-10)
+ * Fetch historical stock data from Yahoo Finance for a specific date range
  */
-export function runBacktest(
-  date: string,
-  diversificationCount: number = 5
-): BacktestResult | null {
-  // Validate diversification count
-  const count = Math.max(3, Math.min(10, diversificationCount));
+async function fetchHistoricalData(
+  symbol: string,
+  endDate: Date
+): Promise<{
+  symbol: string;
+  name: string;
+  prices: { date: Date; high: number; low: number; close: number; adjClose: number }[];
+} | null> {
+  try {
+    // Calculate period1 (9 months before endDate) and period2 (endDate)
+    const period2 = Math.floor(endDate.getTime() / 1000);
+    const startDate = new Date(endDate);
+    startDate.setMonth(startDate.getMonth() - 9); // 9 months for 6-month momentum + 90-day risk
+    const period1 = Math.floor(startDate.getTime() / 1000);
+
+    const rawResponse = await callDataApi("YahooFinance/get_stock_chart", {
+      query: {
+        symbol,
+        region: "US",
+        interval: "1d",
+        period1: period1.toString(),
+        period2: period2.toString(),
+        includeAdjustedClose: "true",
+      },
+    });
+
+    const response = rawResponse as YahooFinanceResponse;
+
+    if (!response?.chart?.result?.[0]) {
+      return null;
+    }
+
+    const result = response.chart.result[0];
+    const meta = result.meta;
+    const timestamps = result.timestamp || [];
+    const quotes = result.indicators?.quote?.[0] || {};
+    const adjCloseData = result.indicators?.adjclose?.[0]?.adjclose || [];
+
+    const prices = timestamps.map((ts: number, i: number) => ({
+      date: new Date(ts * 1000),
+      high: quotes.high?.[i] || 0,
+      low: quotes.low?.[i] || 0,
+      close: quotes.close?.[i] || 0,
+      adjClose: adjCloseData[i] || quotes.close?.[i] || 0,
+    })).filter((p: { close: number }) => p.close > 0);
+
+    return {
+      symbol,
+      name: meta.longName || meta.shortName || symbol,
+      prices,
+    };
+  } catch (error) {
+    console.error(`Error fetching historical data for ${symbol}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Calculate 6-month momentum at a specific date
+ */
+function calculateMomentumAtDate(
+  prices: { date: Date; adjClose: number }[],
+  targetDate: Date
+): number {
+  // Find prices up to target date
+  const relevantPrices = prices.filter(p => p.date <= targetDate);
+  if (relevantPrices.length < 126) return 0; // Need ~6 months of data
+
+  // Get price 6 months ago and current price
+  const endPrice = relevantPrices[relevantPrices.length - 1].adjClose;
+  const startIndex = Math.max(0, relevantPrices.length - 126);
+  const startPrice = relevantPrices[startIndex].adjClose;
+
+  if (startPrice === 0) return 0;
+  return (endPrice - startPrice) / startPrice;
+}
+
+/**
+ * Calculate risk (90-day max range) at a specific date
+ */
+function calculateRiskAtDate(
+  prices: { date: Date; high: number; low: number; close: number }[],
+  targetDate: Date
+): number {
+  // Find prices up to target date
+  const relevantPrices = prices.filter(p => p.date <= targetDate);
+  if (relevantPrices.length < 2) return 0;
+
+  // Get last 90 days
+  const recentPrices = relevantPrices.slice(-90);
   
-  // Get data for the specified date
-  const stocks = historicalData[date];
-  if (!stocks || stocks.length === 0) {
+  const maxHigh = Math.max(...recentPrices.map(p => p.high));
+  const minLow = Math.min(...recentPrices.map(p => p.low));
+  const currentPrice = recentPrices[recentPrices.length - 1].close;
+
+  if (currentPrice === 0) return 0;
+  
+  // MaxRangePct * sqrt(12) for annualization
+  return ((maxHigh - minLow) / currentPrice) * Math.sqrt(12);
+}
+
+/**
+ * Run backtest for any arbitrary date
+ * Fetches real data from Yahoo Finance API
+ */
+export async function runBacktestForDate(
+  dateStr: string,
+  diversificationCount: number = 5
+): Promise<BacktestResult | null> {
+  const count = Math.max(3, Math.min(10, diversificationCount));
+  const targetDate = new Date(dateStr + "T23:59:59Z");
+
+  // Fetch data for all symbols in parallel (in batches to avoid rate limiting)
+  const batchSize = 20;
+  const allStocks: BacktestStock[] = [];
+
+  for (let i = 0; i < SEIHAI_SYMBOLS.length; i += batchSize) {
+    const batch = SEIHAI_SYMBOLS.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (symbol) => {
+        const data = await fetchHistoricalData(symbol, targetDate);
+        if (!data || data.prices.length < 126) return null;
+
+        const momentum = calculateMomentumAtDate(data.prices, targetDate);
+        const risk = calculateRiskAtDate(data.prices, targetDate);
+        const lastPrice = data.prices[data.prices.length - 1];
+
+        if (risk === 0 || momentum === 0) return null;
+
+        return {
+          symbol,
+          name: data.name,
+          momentum,
+          risk,
+          price: lastPrice.close,
+          rank: 0,
+        };
+      })
+    );
+
+    allStocks.push(...batchResults.filter((s): s is BacktestStock => s !== null));
+    
+    // Small delay between batches to avoid rate limiting
+    if (i + batchSize < SEIHAI_SYMBOLS.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  if (allStocks.length === 0) {
     return null;
   }
 
-  // Sort by momentum (descending) - should already be sorted, but ensure
-  const sortedStocks = [...stocks].sort((a, b) => b.momentum - a.momentum);
+  // Sort by momentum descending
+  allStocks.sort((a, b) => b.momentum - a.momentum);
+  allStocks.forEach((stock, idx) => {
+    stock.rank = idx + 1;
+  });
 
   // Select top N stocks
-  const selectedStocks = sortedStocks.slice(0, count);
+  const selectedStocks = allStocks.slice(0, count);
 
   // Calculate risk-inverse weights
   const totalInverseRisk = selectedStocks.reduce(
@@ -74,16 +240,16 @@ export function runBacktest(
     symbol: stock.symbol,
     name: stock.name,
     weight: ((1 / stock.risk) / totalInverseRisk) * 100,
-    momentum: stock.momentum * 100, // Convert to percentage
+    momentum: stock.momentum * 100,
     risk: stock.risk,
     price: stock.price,
   }));
 
-  // Sort by weight descending for display
+  // Sort by weight descending
   holdings.sort((a, b) => b.weight - a.weight);
 
   return {
-    date,
+    date: dateStr,
     holdings,
     totalHoldings: holdings.length,
     diversificationCount: count,
@@ -91,56 +257,33 @@ export function runBacktest(
 }
 
 /**
- * Get all available stocks for a specific date
+ * Get available backtest dates (for backward compatibility)
+ * Now returns a list of suggested dates
  */
-export function getStocksForDate(date: string): BacktestStock[] | null {
-  return historicalData[date] || null;
+export function getAvailableDates(): string[] {
+  const dates: string[] = [];
+  const today = new Date();
+  
+  // Generate dates for past 24 months (end of each month)
+  for (let i = 1; i <= 24; i++) {
+    const date = new Date(today);
+    date.setMonth(date.getMonth() - i);
+    // Set to last day of month
+    date.setDate(0);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+  
+  return dates.sort().reverse();
 }
 
 /**
- * Generate sample backtest data for demonstration
- * This creates synthetic historical data based on the current data
+ * Legacy function - kept for backward compatibility
  */
-export function generateSampleBacktestData(): Record<string, BacktestStock[]> {
-  const baseDate = "2025-12-31";
-  const baseStocks = historicalData[baseDate];
-  
-  if (!baseStocks) {
-    return {};
-  }
-
-  const sampleData: Record<string, BacktestStock[]> = {};
-  
-  // Generate data for past 12 months
-  const months = [
-    "2025-01-31", "2025-02-28", "2025-03-31", "2025-04-30",
-    "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31",
-    "2025-09-30", "2025-10-31", "2025-11-30", "2025-12-31"
-  ];
-
-  for (const month of months) {
-    // Create variation of base data
-    const monthStocks = baseStocks.map((stock, idx) => {
-      // Add some random variation to momentum and risk
-      const monthIndex = months.indexOf(month);
-      const variation = 1 + (Math.sin(monthIndex * 0.5 + idx * 0.1) * 0.3);
-      
-      return {
-        ...stock,
-        momentum: stock.momentum * variation,
-        risk: stock.risk * (0.8 + Math.random() * 0.4),
-        price: stock.price * variation,
-      };
-    });
-
-    // Re-sort by momentum and update ranks
-    monthStocks.sort((a, b) => b.momentum - a.momentum);
-    monthStocks.forEach((stock, idx) => {
-      stock.rank = idx + 1;
-    });
-
-    sampleData[month] = monthStocks;
-  }
-
-  return sampleData;
+export function runBacktest(
+  date: string,
+  diversificationCount: number = 5
+): BacktestResult | null {
+  // This is now a sync wrapper that returns null
+  // The actual implementation is in runBacktestForDate
+  return null;
 }

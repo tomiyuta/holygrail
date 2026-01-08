@@ -21,8 +21,7 @@ import { notifyOwner } from "./_core/notification";
 import { getAllPerformanceData } from "./performanceData";
 import {
   getAvailableDates,
-  runBacktest,
-  getStocksForDate,
+  runBacktestForDate,
 } from "./backtestService";
 
 export const appRouter = router({
@@ -178,27 +177,12 @@ export const appRouter = router({
         date: z.string(),
         diversificationCount: z.number().min(3).max(10).default(5),
       }))
-      .query(({ input }) => {
-        const result = runBacktest(input.date, input.diversificationCount);
+      .query(async ({ input }) => {
+        const result = await runBacktestForDate(input.date, input.diversificationCount);
         if (!result) {
-          throw new Error("指定された日付のデータが見つかりません");
+          throw new Error("指定された日付のデータが見つかりません。過去2年以内の日付を選択してください。");
         }
         return result;
-      }),
-
-    /**
-     * Get all stocks for a specific date
-     */
-    getStocks: publicProcedure
-      .input(z.object({
-        date: z.string(),
-      }))
-      .query(({ input }) => {
-        const stocks = getStocksForDate(input.date);
-        if (!stocks) {
-          throw new Error("指定された日付のデータが見つかりません");
-        }
-        return stocks;
       }),
   }),
 
