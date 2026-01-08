@@ -7,7 +7,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, Briefcase, History, BarChart3 } from 'lucide-react';
+import { Loader2, AlertCircle, Briefcase, History, BarChart3, TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'wouter';
 import { useMarketSignals } from '@/hooks/useMarketSignals';
 import { StatusBar } from '@/components/StatusBar';
@@ -95,9 +95,9 @@ export default function Home() {
                 </button>
               </Link>
               <Link href="/performance">
-                <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-lg shadow-emerald-600/20">
                   <BarChart3 className="w-4 h-4" />
-                  <span className="text-sm font-medium">パフォーマンス</span>
+                  <span className="text-sm font-semibold">パフォーマンス</span>
                 </button>
               </Link>
             </div>
@@ -119,15 +119,42 @@ export default function Home() {
 
           {/* Right Column - Stats */}
           <div className="col-span-12 lg:col-span-4 space-y-4">
-            <StatsCard
-              title="バックテスト実績"
-              icon="chart"
-              stats={[
-                { label: '年率リターン', value: '+18.8%', color: 'oklch(0.75 0.2 145)' },
-                { label: 'シャープレシオ', value: '1.29' },
-                { label: '最大DD', value: '-22.5%', color: 'oklch(0.65 0.25 25)' },
-              ]}
-            />
+            {/* Performance Summary Card with Link */}
+            <Link href="/performance">
+              <motion.div 
+                className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:border-emerald-500/50 hover:bg-card/80 transition-all group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">月次パフォーマンス</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-400 transition-colors" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">攻撃型聖杯</p>
+                    <p className="text-lg font-bold text-emerald-400">+46.92%</p>
+                    <p className="text-xs text-muted-foreground">累計リターン</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">防御型聖杯</p>
+                    <p className="text-lg font-bold text-blue-400">+12.89%</p>
+                    <p className="text-xs text-muted-foreground">累計リターン</p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-border">
+                  <p className="text-xs text-center text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                    詳細なパフォーマンス一覧を見る →
+                  </p>
+                </div>
+              </motion.div>
+            </Link>
+            
             <StatsCard
               title="統計的検証"
               icon="target"
