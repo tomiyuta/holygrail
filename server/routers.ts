@@ -18,6 +18,7 @@ import {
   updateAlertSubscription,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { getAllPerformanceData } from "./performanceData";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -135,6 +136,16 @@ export const appRouter = router({
      */
     getLatest: publicProcedure.query(async () => {
       return await getLatestPortfolioRecommendations();
+    }),
+  }),
+
+  // Performance data router
+  performance: router({
+    /**
+     * Get monthly performance data for both portfolios
+     */
+    getMonthlyData: publicProcedure.query(() => {
+      return getAllPerformanceData();
     }),
   }),
 

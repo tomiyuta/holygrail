@@ -7,7 +7,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, Briefcase, History } from 'lucide-react';
+import { Loader2, AlertCircle, Briefcase, History, BarChart3 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useMarketSignals } from '@/hooks/useMarketSignals';
 import { StatusBar } from '@/components/StatusBar';
@@ -92,6 +92,12 @@ export default function Home() {
                 <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
                   <History className="w-4 h-4" />
                   <span className="text-sm font-medium">履歴</span>
+                </button>
+              </Link>
+              <Link href="/performance">
+                <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="text-sm font-medium">パフォーマンス</span>
                 </button>
               </Link>
             </div>
