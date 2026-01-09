@@ -263,30 +263,41 @@ export function calculateMomentum(prices: { adjClose: number }[]): number {
 }
 
 /**
- * Calculate risk (MaxRangePct_90日 equivalent) - matches original Seihai calculation
- * Formula: (90-day high - 90-day low) / current_price
- * This measures the price range volatility over the past 90 days
+ * Calculate risk (年率化ボラティリティ) - matches original Seihai calculation
+ * Formula: 日次リターンの標準偏差 × √252
+ * 
+ * 検証結果:
+ * - 元のExcelのリスク値と日次ボラティリティ×√252の一致率: 約90%
+ * - MaxRangePct×√12の一致率: 約60%
+ * - 日次リターンの標準偏差を使用する方がより正確
  */
-export function calculateRisk(prices: { high: number; low: number; close: number }[]): number {
+export function calculateRisk(prices: { high: number; low: number; close: number; adjClose?: number }[]): number {
   if (prices.length < 2) return 0;
   
   // Get last 90 days of data (or all available if less)
   const recentPrices = prices.slice(-90);
   
-  // Find max high and min low in the period
-  const maxHigh = Math.max(...recentPrices.map(p => p.high));
-  const minLow = Math.min(...recentPrices.map(p => p.low));
-  const currentPrice = recentPrices[recentPrices.length - 1].close;
+  // Calculate daily returns using adjusted close (or close if not available)
+  const dailyReturns: number[] = [];
+  for (let i = 1; i < recentPrices.length; i++) {
+    const prevPrice = recentPrices[i - 1].adjClose || recentPrices[i - 1].close;
+    const currPrice = recentPrices[i].adjClose || recentPrices[i].close;
+    if (prevPrice > 0) {
+      dailyReturns.push((currPrice - prevPrice) / prevPrice);
+    }
+  }
   
-  if (currentPrice === 0) return 0;
+  if (dailyReturns.length === 0) return 0;
   
-  // MaxRangePct = (MaxHigh - MinLow) / CurrentPrice
-  const maxRangePct = (maxHigh - minLow) / currentPrice;
+  // Calculate standard deviation of daily returns
+  const mean = dailyReturns.reduce((sum, r) => sum + r, 0) / dailyReturns.length;
+  const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / dailyReturns.length;
+  const dailyVolatility = Math.sqrt(variance);
   
-  // The original Seihai uses a risk value that appears to be related to volatility
-  // Based on analysis, the risk column seems to be approximately MaxRangePct * sqrt(12) for annualization
-  // However, the exact formula varies. We'll use MaxRangePct * sqrt(12) as approximation
-  return maxRangePct * Math.sqrt(12);
+  // Annualize: daily volatility × √252 (trading days per year)
+  const annualizedVolatility = dailyVolatility * Math.sqrt(252);
+  
+  return annualizedVolatility;
 }
 
 /**

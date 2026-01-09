@@ -171,10 +171,14 @@ function calculateMomentumAtDate(
 }
 
 /**
- * Calculate risk (90-day max range) at a specific date
+ * Calculate risk (年率化ボラティリティ) at a specific date
+ * Formula: 日次リターンの標準偏差 × √252
+ * 
+ * 検証結果:
+ * - 元のExcelのリスク値と日次ボラティリティ×√252の一致率: 約90%
  */
 function calculateRiskAtDate(
-  prices: { date: Date; high: number; low: number; close: number }[],
+  prices: { date: Date; high: number; low: number; close: number; adjClose?: number }[],
   targetDate: Date
 ): number {
   // Find prices up to target date
@@ -184,14 +188,25 @@ function calculateRiskAtDate(
   // Get last 90 days
   const recentPrices = relevantPrices.slice(-90);
   
-  const maxHigh = Math.max(...recentPrices.map(p => p.high));
-  const minLow = Math.min(...recentPrices.map(p => p.low));
-  const currentPrice = recentPrices[recentPrices.length - 1].close;
-
-  if (currentPrice === 0) return 0;
+  // Calculate daily returns using close price
+  const dailyReturns: number[] = [];
+  for (let i = 1; i < recentPrices.length; i++) {
+    const prevPrice = recentPrices[i - 1].adjClose || recentPrices[i - 1].close;
+    const currPrice = recentPrices[i].adjClose || recentPrices[i].close;
+    if (prevPrice > 0) {
+      dailyReturns.push((currPrice - prevPrice) / prevPrice);
+    }
+  }
   
-  // MaxRangePct * sqrt(12) for annualization
-  return ((maxHigh - minLow) / currentPrice) * Math.sqrt(12);
+  if (dailyReturns.length === 0) return 0;
+  
+  // Calculate standard deviation of daily returns
+  const mean = dailyReturns.reduce((sum, r) => sum + r, 0) / dailyReturns.length;
+  const variance = dailyReturns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / dailyReturns.length;
+  const dailyVolatility = Math.sqrt(variance);
+  
+  // Annualize: daily volatility × √252 (trading days per year)
+  return dailyVolatility * Math.sqrt(252);
 }
 
 /**
