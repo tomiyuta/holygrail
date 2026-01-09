@@ -34,13 +34,24 @@ export interface MarketAnalysis {
   };
 }
 
+/**
+ * 市場シグナルを取得するカスタムフック
+ * 
+ * キャッシュ設定を最適化してAPI呼び出しを削減:
+ * - staleTime: 5分（この間はAPIを呼び出さない）
+ * - refetchInterval: 5分（自動更新間隔を延長）
+ * - サーバーサイドでも5分キャッシュがあるため、二重のキャッシュで効率化
+ */
 export function useMarketSignals() {
   const utils = trpc.useUtils();
   
   const { data, isLoading, error, refetch } = trpc.market.getAnalysis.useQuery(undefined, {
-    refetchInterval: 60000, // Refetch every minute
-    staleTime: 30000, // Consider data stale after 30 seconds
-    retry: 3,
+    // 5分間はAPIを呼び出さない（サーバーサイドキャッシュと同期）
+    staleTime: 5 * 60 * 1000,
+    // 5分ごとに自動更新（市場データは頻繁に変わらない）
+    refetchInterval: 5 * 60 * 1000,
+    // リトライ回数
+    retry: 2,
   });
 
   const analysis: MarketAnalysis | null = data ? {

@@ -4,10 +4,12 @@
  * and allows simulation with different diversification settings
  * 
  * Updated to support arbitrary date selection using Yahoo Finance API
+ * キャッシュ統合済み - バックテスト結果をキャッシュ（過去データは変わらないため24時間）
  */
 
 import { callDataApi } from "./_core/dataApi";
 import { SEIHAI_SYMBOLS } from "./marketData";
+import { serverCache, CACHE_TTL, createCacheKey } from "./cache";
 
 export interface BacktestStock {
   symbol: string;
@@ -67,9 +69,31 @@ interface YahooFinanceResponse {
 }
 
 /**
- * Fetch historical stock data from Yahoo Finance for a specific date range
+ * Fetch historical stock data from Yahoo Finance for a specific date range (キャッシュ付き)
  */
 async function fetchHistoricalData(
+  symbol: string,
+  endDate: Date
+): Promise<{
+  symbol: string;
+  name: string;
+  prices: { date: Date; high: number; low: number; close: number; adjClose: number }[];
+} | null> {
+  // Create cache key based on symbol and date (rounded to day)
+  const dateKey = endDate.toISOString().split('T')[0];
+  const cacheKey = createCacheKey("historical", symbol, dateKey);
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    () => fetchHistoricalDataInternal(symbol, endDate),
+    CACHE_TTL.BACKTEST_RESULTS  // 24 hours - historical data doesn't change
+  );
+}
+
+/**
+ * Fetch historical stock data from Yahoo Finance (内部関数)
+ */
+async function fetchHistoricalDataInternal(
   symbol: string,
   endDate: Date
 ): Promise<{
@@ -171,10 +195,9 @@ function calculateRiskAtDate(
 }
 
 /**
- * Run backtest for any arbitrary date
- * Fetches real data from Yahoo Finance API
+ * Run backtest for any arbitrary date (内部関数)
  */
-export async function runBacktestForDate(
+async function runBacktestForDateInternal(
   dateStr: string,
   diversificationCount: number = 5
 ): Promise<BacktestResult | null> {
@@ -254,6 +277,23 @@ export async function runBacktestForDate(
     totalHoldings: holdings.length,
     diversificationCount: count,
   };
+}
+
+/**
+ * Run backtest for any arbitrary date (キャッシュ付き)
+ * Fetches real data from Yahoo Finance API
+ */
+export async function runBacktestForDate(
+  dateStr: string,
+  diversificationCount: number = 5
+): Promise<BacktestResult | null> {
+  const cacheKey = createCacheKey("backtest", dateStr, diversificationCount);
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    () => runBacktestForDateInternal(dateStr, diversificationCount),
+    CACHE_TTL.BACKTEST_RESULTS  // 24 hours
+  );
 }
 
 /**

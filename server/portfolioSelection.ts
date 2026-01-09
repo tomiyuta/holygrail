@@ -6,6 +6,8 @@
  * 1. Sort stocks by 6-month momentum (descending)
  * 2. Select top N stocks based on regime
  * 3. Calculate weights using risk-inverse weighting (1/risk)
+ * 
+ * キャッシュ統合済み - ポートフォリオ推奨結果をキャッシュ
  */
 
 import {
@@ -15,6 +17,7 @@ import {
   SEIHAI_SYMBOLS,
   DEFENSIVE_ETFS,
 } from "./marketData";
+import { serverCache, CACHE_TTL, createCacheKey } from "./cache";
 
 export interface PortfolioHolding {
   symbol: string;
@@ -33,18 +36,12 @@ export interface PortfolioSelection {
 }
 
 /**
- * Select aggressive portfolio holdings based on Seihai methodology
- * 
- * Original Seihai Logic:
- * 1. Calculate 6-month momentum for all stocks in universe
- * 2. Sort by momentum (descending)
- * 3. Select top N stocks (N = 分散数, typically 5)
- * 4. Calculate risk-inverse weights: weight_i = (1/risk_i) / sum(1/risk_j)
+ * Select aggressive portfolio holdings based on Seihai methodology (内部関数)
  */
-export async function selectAggressivePortfolio(
+async function selectAggressivePortfolioInternal(
   regime: "bull" | "bear" | "neutral",
-  maxSymbols: number = 100,  // Increased to cover more of the Seihai universe
-  customDiversificationCount?: number  // User-specified diversification count (3-10)
+  maxSymbols: number = 100,
+  customDiversificationCount?: number
 ): Promise<PortfolioSelection> {
   // Use custom diversification count if provided, otherwise use regime-based default
   let targetHoldings: number;
@@ -132,10 +129,32 @@ export async function selectAggressivePortfolio(
 }
 
 /**
- * Select defensive portfolio holdings based on low volatility
- * Uses volatility ranking with equal weighting
+ * Select aggressive portfolio holdings based on Seihai methodology (キャッシュ付き)
  */
-export async function selectDefensivePortfolio(
+export async function selectAggressivePortfolio(
+  regime: "bull" | "bear" | "neutral",
+  maxSymbols: number = 100,
+  customDiversificationCount?: number
+): Promise<PortfolioSelection> {
+  const cacheKey = createCacheKey(
+    "portfolio",
+    "aggressive",
+    regime,
+    maxSymbols,
+    customDiversificationCount
+  );
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    () => selectAggressivePortfolioInternal(regime, maxSymbols, customDiversificationCount),
+    CACHE_TTL.PORTFOLIO_RECOMMENDATIONS
+  );
+}
+
+/**
+ * Select defensive portfolio holdings based on low volatility (内部関数)
+ */
+async function selectDefensivePortfolioInternal(
   regime: "bull" | "bear" | "neutral"
 ): Promise<PortfolioSelection> {
   // Determine number of holdings based on regime
@@ -209,11 +228,26 @@ export async function selectDefensivePortfolio(
 }
 
 /**
- * Get complete portfolio recommendations for both strategies
+ * Select defensive portfolio holdings based on low volatility (キャッシュ付き)
+ */
+export async function selectDefensivePortfolio(
+  regime: "bull" | "bear" | "neutral"
+): Promise<PortfolioSelection> {
+  const cacheKey = createCacheKey("portfolio", "defensive", regime);
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    () => selectDefensivePortfolioInternal(regime),
+    CACHE_TTL.PORTFOLIO_RECOMMENDATIONS
+  );
+}
+
+/**
+ * Get complete portfolio recommendations for both strategies (キャッシュ付き)
  */
 export async function getPortfolioRecommendations(
   regime: "bull" | "bear" | "neutral",
-  diversificationCount?: number  // Optional user-specified diversification count
+  diversificationCount?: number
 ): Promise<{
   aggressive: PortfolioSelection;
   defensive: PortfolioSelection;

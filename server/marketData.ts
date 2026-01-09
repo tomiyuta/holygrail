@@ -2,9 +2,12 @@
  * Market Data Service
  * Fetches real-time and historical market data from Yahoo Finance API
  * Updated to match the original Seihai (Holy Grail) portfolio selection logic
+ * 
+ * キャッシュ統合済み - API呼び出しを大幅に削減
  */
 
 import { callDataApi } from "./_core/dataApi";
+import { serverCache, CACHE_TTL, createCacheKey } from "./cache";
 
 // 聖杯（攻撃型）の銘柄ユニバース - S&P1500から抽出した上位100銘柄
 // 元のExcelダッシュボードと同じ銘柄リスト
@@ -119,9 +122,9 @@ interface YahooFinanceResponse {
 }
 
 /**
- * Fetch stock chart data from Yahoo Finance
+ * Fetch stock chart data from Yahoo Finance (内部関数 - キャッシュなし)
  */
-export async function fetchStockChart(
+async function fetchStockChartInternal(
   symbol: string,
   range: string = "6mo",
   interval: string = "1d"
@@ -172,6 +175,23 @@ export async function fetchStockChart(
     console.error(`Error fetching data for ${symbol}:`, error);
     return null;
   }
+}
+
+/**
+ * Fetch stock chart data from Yahoo Finance (キャッシュ付き)
+ */
+export async function fetchStockChart(
+  symbol: string,
+  range: string = "6mo",
+  interval: string = "1d"
+): Promise<StockData | null> {
+  const cacheKey = createCacheKey("stock", symbol, range, interval);
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    () => fetchStockChartInternal(symbol, range, interval),
+    CACHE_TTL.STOCK_DATA
+  );
 }
 
 /**
@@ -245,9 +265,22 @@ export function calculateVolatility(prices: { adjClose: number }[]): number {
 }
 
 /**
- * Fetch signal indicators for market regime detection
+ * Fetch signal indicators for market regime detection (キャッシュ付き)
  */
 export async function fetchSignalIndicators(): Promise<SignalIndicators | null> {
+  const cacheKey = createCacheKey("signals", "indicators");
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    fetchSignalIndicatorsInternal,
+    CACHE_TTL.MARKET_ANALYSIS
+  );
+}
+
+/**
+ * Fetch signal indicators for market regime detection (内部関数)
+ */
+async function fetchSignalIndicatorsInternal(): Promise<SignalIndicators | null> {
   try {
     // Fetch SPY data for price and moving averages
     const spyData = await fetchStockChart(SIGNAL_SYMBOLS.SPY, "1y", "1d");
@@ -437,4 +470,18 @@ export function calculateAllocation(regime: "bull" | "bear" | "neutral"): {
     default:
       return { aggressive: 50, defensive: 50 };
   }
+}
+
+/**
+ * キャッシュ統計を取得（デバッグ用）
+ */
+export function getCacheStats() {
+  return serverCache.getStats();
+}
+
+/**
+ * キャッシュをクリア（管理用）
+ */
+export function clearCache() {
+  serverCache.clear();
 }

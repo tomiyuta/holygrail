@@ -6,7 +6,7 @@ export function HistoryCard() {
   const { data: history, isLoading, error } = trpc.market.getHistory.useQuery(
     { limit: 10 },
     {
-      staleTime: 60000, // 1 minute
+      staleTime: 5 * 60 * 1000, // 5 minutes - サーバーキャッシュと同期
       retry: 2,
     }
   );

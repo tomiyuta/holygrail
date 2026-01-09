@@ -11,7 +11,7 @@ export function AlertSettings() {
 
   const { data: subscription, isLoading } = trpc.alerts.getSubscription.useQuery(undefined, {
     enabled: isAuthenticated,
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const updateMutation = trpc.alerts.updateSubscription.useMutation({
