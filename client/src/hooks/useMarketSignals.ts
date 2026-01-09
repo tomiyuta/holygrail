@@ -1,4 +1,5 @@
 import { trpc } from '@/lib/trpc';
+import { useState } from 'react';
 
 // シグナルの型定義
 export interface Signal {
@@ -37,21 +38,30 @@ export interface MarketAnalysis {
 /**
  * 市場シグナルを取得するカスタムフック
  * 
- * キャッシュ設定を最適化してAPI呼び出しを削減:
- * - staleTime: 5分（この間はAPIを呼び出さない）
- * - refetchInterval: 5分（自動更新間隔を延長）
- * - サーバーサイドでも5分キャッシュがあるため、二重のキャッシュで効率化
+ * 月次リバランス対応:
+ * - staleTime: 1時間（サーバーサイドは24時間キャッシュ）
+ * - refetchInterval: 無効（自動更新なし、手動更新のみ）
+ * - 手動更新機能: 全ユーザーが任意のタイミングで更新可能
  */
 export function useMarketSignals() {
   const utils = trpc.useUtils();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { data, isLoading, error, refetch } = trpc.market.getAnalysis.useQuery(undefined, {
-    // 5分間はAPIを呼び出さない（サーバーサイドキャッシュと同期）
-    staleTime: 5 * 60 * 1000,
-    // 5分ごとに自動更新（市場データは頻繁に変わらない）
-    refetchInterval: 5 * 60 * 1000,
+    // 1時間はAPIを呼び出さない（サーバーサイドは24時間キャッシュ）
+    staleTime: 60 * 60 * 1000,
+    // 自動更新なし（手動更新のみ）
+    refetchInterval: false,
     // リトライ回数
     retry: 2,
+  });
+
+  // 手動更新API
+  const refreshSignalsMutation = trpc.refresh.signals.useMutation({
+    onSuccess: () => {
+      // キャッシュを無効化して再取得
+      utils.market.getAnalysis.invalidate();
+    },
   });
 
   const analysis: MarketAnalysis | null = data ? {
@@ -67,9 +77,20 @@ export function useMarketSignals() {
     indicators: data.indicators,
   } : null;
 
+  // 通常の再取得（キャッシュから）
   const refresh = () => {
     utils.market.getAnalysis.invalidate();
     refetch();
+  };
+
+  // 手動更新（サーバーキャッシュをクリアして最新データを取得）
+  const forceRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshSignalsMutation.mutateAsync();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return {
@@ -77,5 +98,7 @@ export function useMarketSignals() {
     loading: isLoading,
     error: error?.message || null,
     refresh,
+    forceRefresh,
+    isRefreshing,
   };
 }

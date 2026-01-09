@@ -18,7 +18,7 @@ import { StatsCard } from '@/components/StatsCard';
 import { RulesCard } from '@/components/RulesCard';
 
 export default function Home() {
-  const { analysis, loading, error, refresh } = useMarketSignals();
+  const { analysis, loading, error, refresh, forceRefresh, isRefreshing } = useMarketSignals();
 
   if (loading && !analysis) {
     return (
@@ -61,7 +61,9 @@ export default function Home() {
         confidence={analysis.confidence}
         lastUpdated={analysis.lastUpdated}
         onRefresh={refresh}
+        onForceRefresh={forceRefresh}
         loading={loading}
+        isRefreshing={isRefreshing}
       />
 
       {/* Main Content */}

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Activity, Clock, RefreshCw } from 'lucide-react';
+import { Activity, Clock, RefreshCw, Download } from 'lucide-react';
 import { MarketRegime } from '@/hooks/useMarketSignals';
 
 interface StatusBarProps {
@@ -8,7 +8,9 @@ interface StatusBarProps {
   confidence: number;
   lastUpdated: Date;
   onRefresh: () => void;
+  onForceRefresh?: () => void;
   loading: boolean;
+  isRefreshing?: boolean;
 }
 
 export function StatusBar({ 
@@ -17,7 +19,9 @@ export function StatusBar({
   confidence, 
   lastUpdated, 
   onRefresh,
-  loading 
+  onForceRefresh,
+  loading,
+  isRefreshing = false,
 }: StatusBarProps) {
   const getRegimeColor = () => {
     switch (regime) {
@@ -80,13 +84,29 @@ export function StatusBar({
                 {lastUpdated.toLocaleTimeString('ja-JP')}
               </span>
             </div>
+            {/* 通常の再読み込み（キャッシュから） */}
             <button
               onClick={onRefresh}
-              disabled={loading}
+              disabled={loading || isRefreshing}
               className="p-1.5 rounded hover:bg-secondary transition-colors disabled:opacity-50"
+              title="キャッシュから再読み込み"
             >
               <RefreshCw className={`w-4 h-4 text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
             </button>
+            {/* 手動更新（サーバーキャッシュをクリアして最新データを取得） */}
+            {onForceRefresh && (
+              <button
+                onClick={onForceRefresh}
+                disabled={loading || isRefreshing}
+                className="flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-colors disabled:opacity-50"
+                title="最新データを取得（サーバーキャッシュをクリア）"
+              >
+                <Download className={`w-3.5 h-3.5 text-primary ${isRefreshing ? 'animate-bounce' : ''}`} />
+                <span className="text-xs font-mono text-primary">
+                  {isRefreshing ? '更新中...' : 'データ更新'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>

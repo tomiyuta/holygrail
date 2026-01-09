@@ -8,6 +8,7 @@ import {
   determineMarketRegime,
   calculateAllocation,
 } from "./marketData";
+import { serverCache } from "./cache";
 import { getPortfolioRecommendations } from "./portfolioSelection";
 import {
   saveSignalHistory,
@@ -184,6 +185,189 @@ export const appRouter = router({
         }
         return result;
       }),
+  }),
+
+  // Data refresh router (手動更新機能)
+  refresh: router({
+    /**
+     * Refresh signal indicators (シグナル指標の手動更新)
+     * キャッシュをクリアして最新データを取得
+     */
+    signals: publicProcedure.mutation(async () => {
+      // シグナル関連のキャッシュをクリア
+      const clearedCount = serverCache.deletePattern(/^(market|signal)/);
+      console.log(`[Refresh] Cleared ${clearedCount} signal cache entries`);
+      
+      // 最新データを取得
+      const indicators = await fetchSignalIndicators();
+      
+      if (!indicators) {
+        throw new Error("シグナルデータの更新に失敗しました");
+      }
+
+      const regimeData = determineMarketRegime(indicators);
+      const allocation = calculateAllocation(regimeData.regime);
+
+      // Save to history
+      await saveSignalHistory({
+        date: new Date(),
+        regime: regimeData.regime,
+        regimeJapanese: regimeData.regimeJapanese,
+        confidence: regimeData.confidence.toString(),
+        bullCount: regimeData.bullCount,
+        bearCount: regimeData.bearCount,
+        bullSignals: regimeData.bullSignals,
+        bearSignals: regimeData.bearSignals,
+        allocation,
+      });
+
+      return {
+        success: true,
+        message: "シグナル指標を更新しました",
+        updatedAt: new Date().toISOString(),
+        regime: regimeData.regime,
+        regimeJapanese: regimeData.regimeJapanese,
+      };
+    }),
+
+    /**
+     * Refresh portfolio recommendations (ポートフォリオの手動更新)
+     * キャッシュをクリアして最新データを取得
+     */
+    portfolio: publicProcedure
+      .input(z.object({
+        diversificationCount: z.number().min(3).max(10).optional(),
+      }).optional())
+      .mutation(async ({ input }) => {
+        // ポートフォリオ関連のキャッシュをクリア
+        const clearedCount = serverCache.deletePattern(/^portfolio/);
+        console.log(`[Refresh] Cleared ${clearedCount} portfolio cache entries`);
+        
+        // 最新の市場環境を取得
+        const indicators = await fetchSignalIndicators();
+        
+        if (!indicators) {
+          throw new Error("市場データの取得に失敗しました");
+        }
+
+        const regimeData = determineMarketRegime(indicators);
+        
+        // 最新のポートフォリオ推奨を取得
+        const recommendations = await getPortfolioRecommendations(
+          regimeData.regime,
+          input?.diversificationCount
+        );
+
+        // Save to database
+        await savePortfolioRecommendation({
+          date: new Date(),
+          type: "aggressive",
+          holdings: recommendations.aggressive.holdings,
+          totalHoldings: recommendations.aggressive.totalHoldings,
+        });
+
+        await savePortfolioRecommendation({
+          date: new Date(),
+          type: "defensive",
+          holdings: recommendations.defensive.holdings,
+          totalHoldings: recommendations.defensive.totalHoldings,
+        });
+
+        return {
+          success: true,
+          message: "ポートフォリオを更新しました",
+          updatedAt: new Date().toISOString(),
+          aggressive: {
+            totalHoldings: recommendations.aggressive.totalHoldings,
+            usingFallback: recommendations.aggressive.usingFallback,
+          },
+          defensive: {
+            totalHoldings: recommendations.defensive.totalHoldings,
+            usingFallback: recommendations.defensive.usingFallback,
+          },
+        };
+      }),
+
+    /**
+     * Refresh all data (全データの手動更新)
+     * シグナル指標とポートフォリオの両方を更新
+     */
+    all: publicProcedure
+      .input(z.object({
+        diversificationCount: z.number().min(3).max(10).optional(),
+      }).optional())
+      .mutation(async ({ input }) => {
+        // 全キャッシュをクリア
+        serverCache.clear();
+        console.log(`[Refresh] Cleared all cache entries`);
+        
+        // 最新の市場環境を取得
+        const indicators = await fetchSignalIndicators();
+        
+        if (!indicators) {
+          throw new Error("市場データの取得に失敗しました");
+        }
+
+        const regimeData = determineMarketRegime(indicators);
+        const allocation = calculateAllocation(regimeData.regime);
+
+        // Save signal history
+        await saveSignalHistory({
+          date: new Date(),
+          regime: regimeData.regime,
+          regimeJapanese: regimeData.regimeJapanese,
+          confidence: regimeData.confidence.toString(),
+          bullCount: regimeData.bullCount,
+          bearCount: regimeData.bearCount,
+          bullSignals: regimeData.bullSignals,
+          bearSignals: regimeData.bearSignals,
+          allocation,
+        });
+        
+        // 最新のポートフォリオ推奨を取得
+        const recommendations = await getPortfolioRecommendations(
+          regimeData.regime,
+          input?.diversificationCount
+        );
+
+        // Save portfolio recommendations
+        await savePortfolioRecommendation({
+          date: new Date(),
+          type: "aggressive",
+          holdings: recommendations.aggressive.holdings,
+          totalHoldings: recommendations.aggressive.totalHoldings,
+        });
+
+        await savePortfolioRecommendation({
+          date: new Date(),
+          type: "defensive",
+          holdings: recommendations.defensive.holdings,
+          totalHoldings: recommendations.defensive.totalHoldings,
+        });
+
+        return {
+          success: true,
+          message: "全データを更新しました",
+          updatedAt: new Date().toISOString(),
+          regime: regimeData.regime,
+          regimeJapanese: regimeData.regimeJapanese,
+          aggressive: {
+            totalHoldings: recommendations.aggressive.totalHoldings,
+            usingFallback: recommendations.aggressive.usingFallback,
+          },
+          defensive: {
+            totalHoldings: recommendations.defensive.totalHoldings,
+            usingFallback: recommendations.defensive.usingFallback,
+          },
+        };
+      }),
+
+    /**
+     * Get cache statistics (キャッシュ統計情報)
+     */
+    getCacheStats: publicProcedure.query(() => {
+      return serverCache.getStats();
+    }),
   }),
 
   // Alert subscription router

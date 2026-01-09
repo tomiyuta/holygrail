@@ -148,21 +148,25 @@ class ServerCache {
 export const serverCache = new ServerCache();
 
 // キャッシュTTL定数（ミリ秒）
+// 月次リバランス対応: ポートフォリオは月31日、シグナルは24時間
 export const CACHE_TTL = {
-  // 市場分析データ: 30分（API制限対策で延長）
-  MARKET_ANALYSIS: 30 * 60 * 1000,
+  // 市場分析データ: 24時間（毎日06:30に自動更新）
+  MARKET_ANALYSIS: 24 * 60 * 60 * 1000,
   
-  // 個別銘柄データ: 1時間（API制限対策で延長）
-  STOCK_DATA: 60 * 60 * 1000,
+  // 個別銘柄データ: 24時間（毎日06:30に自動更新）
+  STOCK_DATA: 24 * 60 * 60 * 1000,
   
-  // ポートフォリオ推奨: 2時間（API制限対策で延長）
-  PORTFOLIO_RECOMMENDATIONS: 2 * 60 * 60 * 1000,
+  // ポートフォリオ推奨: 31日（毎月1日06:30に自動更新）
+  PORTFOLIO_RECOMMENDATIONS: 31 * 24 * 60 * 60 * 1000,
   
   // バックテスト結果: 24時間（過去データは変わらない）
   BACKTEST_RESULTS: 24 * 60 * 60 * 1000,
   
-  // シグナル履歴: 1時間
-  SIGNAL_HISTORY: 60 * 60 * 1000,
+  // シグナル履歴: 24時間（毎日06:30に自動更新）
+  SIGNAL_HISTORY: 24 * 60 * 60 * 1000,
+  
+  // シグナル指標: 24時間（毎日06:30に自動更新）
+  SIGNAL_INDICATORS: 24 * 60 * 60 * 1000,
 };
 
 // 定期的なクリーンアップ（1時間ごと）

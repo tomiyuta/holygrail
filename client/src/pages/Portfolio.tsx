@@ -1,14 +1,36 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Briefcase, Settings2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, Settings2, Download, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { PortfolioList } from '@/components/PortfolioList';
 import { useMarketSignals } from '@/hooks/useMarketSignals';
+import { trpc } from '@/lib/trpc';
 
 export default function Portfolio() {
   const { analysis } = useMarketSignals();
   const [diversificationCount, setDiversificationCount] = useState<number>(5);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  
+  const utils = trpc.useUtils();
+  
+  // ポートフォリオ手動更新API
+  const refreshPortfolioMutation = trpc.refresh.portfolio.useMutation({
+    onSuccess: () => {
+      // キャッシュを無効化して再取得
+      utils.portfolio.getRecommendations.invalidate();
+    },
+  });
+
+  // ポートフォリオの手動更新
+  const handleForceRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshPortfolioMutation.mutateAsync({ diversificationCount });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
@@ -35,6 +57,23 @@ export default function Portfolio() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* Portfolio Refresh Button */}
+              <button
+                onClick={handleForceRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-colors disabled:opacity-50"
+                title="最新データを取得（サーバーキャッシュをクリア）"
+              >
+                {isRefreshing ? (
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 text-primary" />
+                )}
+                <span className="text-sm font-medium text-primary">
+                  {isRefreshing ? '更新中...' : 'データ更新'}
+                </span>
+              </button>
+              
               {/* Settings Toggle */}
               <button
                 onClick={() => setShowSettings(!showSettings)}
