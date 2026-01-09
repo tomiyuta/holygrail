@@ -4,14 +4,17 @@
  * Updated to match the original Seihai (Holy Grail) portfolio selection logic
  * 
  * キャッシュ統合済み - API呼び出しを大幅に削減
+ * 
+ * 動的選定モード:
+ * - S&P500全銘柄（497銘柄）から6か月モメンタム上位100銘柄を動的に選定
  */
 
 import { callDataApi } from "./_core/dataApi";
 import { serverCache, CACHE_TTL, createCacheKey } from "./cache";
 
-// 聖杯（攻撃型）の銘柄ユニバース - S&P1500から抽出した上位100銘柄
-// 元のExcelダッシュボードと同じ銘柄リスト
-export const SEIHAI_SYMBOLS = [
+// S&P500全銘柄リスト（497銘柄）
+// 元のExcelダッシュボードから抽出
+export const SP500_ALL_SYMBOLS = [
   "SNDK", "WDC", "WBD", "MU", "ALB", "TER", "APP", "STX", "FIX", "LRCX",
   "GOOGL", "GOOG", "NEM", "GLW", "INTC", "CHRW", "EXPE", "IVZ", "FSLR", "AMD",
   "GM", "CMI", "TPR", "CAT", "REGN", "INCY", "TSLA", "DAL", "AMAT", "APH",
@@ -21,8 +24,52 @@ export const SEIHAI_SYMBOLS = [
   "RTX", "BK", "APA", "CFG", "FOX", "EXPD", "CAH", "MS", "IDXX", "CVNA",
   "PH", "GE", "GS", "HOOD", "KEYS", "WST", "VTR", "EL", "WELL", "DAY",
   "FDX", "LUV", "TJX", "AIZ", "MPWR", "NVDA", "DLTR", "SYF", "NUE", "MNST",
-  "HCA", "ABBV", "STT", "PLD", "TKO", "WYNN", "LHX", "HPE", "HWM", "UHS"
+  "HCA", "ABBV", "STT", "PLD", "TKO", "WYNN", "LHX", "HPE", "HWM", "UHS",
+  "BKR", "VLO", "SRE", "MTD", "KEY", "NOC", "EME", "F", "PWR", "CVS",
+  "CEG", "DG", "ROK", "COR", "EBAY", "HOLX", "EPAM", "AXP", "GD", "JCI",
+  "L", "USB", "CBRE", "WFC", "BAC", "PCG", "MCK", "WMT", "FCX", "EIX",
+  "BMY", "DHR", "LDOS", "IBKR", "COO", "ADI", "TECH", "SPG", "AME", "COF",
+  "AMGN", "ETR", "A", "CSCO", "GL", "MAR", "FE", "MLM", "RF", "PCAR",
+  "HST", "AEP", "EW", "TFC", "JPM", "DVN", "NEE", "CNC", "BG", "NSC",
+  "GILD", "AKAM", "ATO", "FITB", "CINF", "XOM", "SCHW", "BDX", "NDSN", "HIG",
+  "PFG", "NDAQ", "TRV", "OMC", "SNA", "CSX", "CB", "GEHC", "MDT", "XEL",
+  "ALLE", "VMC", "HUBB", "TXT", "PNC", "WTW", "SLB", "DHI", "QCOM", "HAS",
+  "FRT", "HLT", "TTWO", "CCL", "ROL", "PHM", "TRGP", "NCLH", "NTRS", "PEP",
+  "WAT", "FANG", "LNT", "ISRG", "APTV", "CNP", "SWK", "WSM", "LOW", "ACGL",
+  "JBL", "AMZN", "NI", "STE", "ES", "EVRG", "ADM", "AFL", "CTRA", "DOV",
+  "URI", "ALL", "AEE", "MMM", "LMT", "XYL", "HSY", "DELL", "CVX", "FTV",
+  "PSX", "PPL", "RJF", "DDOG", "CTSH", "TROW", "PRU", "HUM", "BA", "UNH",
+  "APO", "MCD", "TRMB", "SOLV", "NRG", "WMB", "MRNA", "TSN", "MCO", "IBM",
+  "D", "HSIC", "CDNS", "PKG", "MA", "BLK", "WAB", "ORLY", "WEC", "BX",
+  "MTB", "YUM", "EXC", "VRTX", "PTC", "JKHY", "HBAN", "NTAP", "COP", "ABNB",
+  "TDY", "AIG", "CMS", "J", "AVY", "EG", "AON", "PNR", "MSCI", "MTCH",
+  "CME", "DUK", "BXP", "DECK", "PFE", "SPGI", "ON", "ED", "V", "MGM",
+  "AOS", "MSFT", "IEX", "MO", "EXE", "BEN", "GPC", "O", "PNW", "UNP",
+  "DTE", "EMR", "CRM", "CPT", "KO", "REG", "MET", "VLTO", "PEG", "WRB",
+  "KMI", "RVTY", "DGX", "NXPI", "ITW", "WM", "KKR", "EQIX", "ECL", "GWW",
+  "GRMN", "EQT", "LH", "ADSK", "XYZ", "ZBH", "CRWD", "ELV", "SJM", "DASH",
+  "SYY", "UPS", "LYV", "SO", "KIM", "NVR", "PODD", "MPC", "OXY", "TAP",
+  "GPN", "RMD", "EQR", "MAS", "BKNG", "FAST", "BBY", "PANW", "TGT", "MAA",
+  "ODFL", "VZ", "IR", "ARES", "ABT", "FICO", "GNRC", "TSCO", "META", "DIS",
+  "ESS", "HD", "BR", "AWK", "AZO", "DPZ", "DE", "SHW", "GEN", "BALL",
+  "BSX", "ADBE", "KHC", "PM", "AMP", "SNPS", "DLR", "DOC", "MSI", "WDAY",
+  "TT", "UDR", "WY", "ETN", "OKE", "LIN", "AVB", "ORCL", "ICE", "MCHP",
+  "SYK", "IFF", "PG", "UBER", "CTVA", "CPAY", "LEN", "ACN", "SBUX", "MKC",
+  "RCL", "TDG", "KR", "NWSA", "CPB", "COST", "PSA", "RSG", "VST", "GIS",
+  "PPG", "OTIS", "HPQ", "NKE", "EXR", "FFIV", "PGR", "APD", "NWS", "T",
+  "CL", "AMCR", "CCI", "CHD", "MMC", "INTU", "VICI", "EOG", "INVH", "VRSN",
+  "TMUS", "LULU", "CTAS", "SW", "DRI", "ADP", "CI", "KDP", "CMCSA", "IRM",
+  "DOW", "CF", "EFX", "TXN", "CSGP", "CAG", "KVUE", "SWKS", "HON", "AJG",
+  "ERIE", "SBAC", "CLX", "LII", "BLDR", "FIS", "STZ", "TPL", "ALGN", "LW",
+  "DXCM", "IP", "CPRT", "AMT", "ZTS", "MDLZ", "FTNT", "DVA", "ROP", "PYPL",
+  "HRL", "TYL", "ZBRA", "KMB", "NOW", "PAYX", "CDW", "POOL", "BRO", "AXON",
+  "NFLX", "VRSK", "CARR", "GDDY", "LYB", "PAYC", "COIN", "ARE", "MOS", "MOH",
+  "FDS", "CMG", "IT", "SMCI", "BAX", "TTD", "CHTR",
 ];
+
+// 聖杯（攻撃型）の銘柄ユニバース - 後方互換性のために維持
+// 動的選定モードでは使用されない
+export const SEIHAI_SYMBOLS = SP500_ALL_SYMBOLS.slice(0, 100);
 
 // S&P 500 top constituents (kept for backward compatibility)
 export const SP500_TOP_SYMBOLS = SEIHAI_SYMBOLS;
@@ -312,6 +359,7 @@ async function fetchSignalIndicatorsInternal(): Promise<SignalIndicators | null>
     try {
       const tnxData = await fetchStockChart(SIGNAL_SYMBOLS.TNX, "5d", "1d");
       const irxData = await fetchStockChart(SIGNAL_SYMBOLS.IRX, "5d", "1d");
+      
       if (tnxData && irxData && tnxData.prices.length > 0 && irxData.prices.length > 0) {
         const tenYear = tnxData.prices[tnxData.prices.length - 1].close;
         const threeMonth = irxData.prices[irxData.prices.length - 1].close;
@@ -326,11 +374,12 @@ async function fetchSignalIndicatorsInternal(): Promise<SignalIndicators | null>
     try {
       const hygData = await fetchStockChart(SIGNAL_SYMBOLS.HYG, "1mo", "1d");
       const lqdData = await fetchStockChart(SIGNAL_SYMBOLS.LQD, "1mo", "1d");
+      
       if (hygData && lqdData && hygData.prices.length > 0 && lqdData.prices.length > 0) {
-        // Calculate yield-like spread based on price movements
-        const hygReturn = calculateMomentum(hygData.prices.slice(-20)) * 100;
-        const lqdReturn = calculateMomentum(lqdData.prices.slice(-20)) * 100;
-        creditSpread = lqdReturn - hygReturn; // Positive = risk-off
+        // Calculate yield-like spread from price performance
+        const hygReturn = calculateMomentum(hygData.prices.slice(-20));
+        const lqdReturn = calculateMomentum(lqdData.prices.slice(-20));
+        creditSpread = (lqdReturn - hygReturn) * 100; // Positive = risk-off
       }
     } catch (e) {
       console.warn("Could not fetch credit spread data");
@@ -352,6 +401,81 @@ async function fetchSignalIndicatorsInternal(): Promise<SignalIndicators | null>
     return null;
   }
 }
+
+/**
+ * Fetch multiple stocks data in parallel with batching (キャッシュ付き)
+ */
+export async function fetchMultipleStocks(
+  symbols: string[],
+  range: string = "6mo",
+  interval: string = "1d"
+): Promise<Map<string, StockData>> {
+  const results = new Map<string, StockData>();
+  
+  // Fetch in batches to avoid rate limiting
+  const batchSize = 10;
+  for (let i = 0; i < symbols.length; i += batchSize) {
+    const batch = symbols.slice(i, i + batchSize);
+    const promises = batch.map(symbol => fetchStockChart(symbol, range, interval));
+    const batchResults = await Promise.all(promises);
+    
+    batchResults.forEach((data, index) => {
+      if (data) {
+        results.set(batch[index], data);
+      }
+    });
+    
+    // Small delay between batches to be nice to the API
+    if (i + batchSize < symbols.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Get dynamic top 100 symbols from S&P500 based on 6-month momentum
+ * This function fetches all S&P500 stocks, calculates momentum, and returns top 100
+ */
+export async function getDynamicTop100Symbols(): Promise<string[]> {
+  const cacheKey = createCacheKey("dynamic", "top100", "symbols");
+  
+  return serverCache.getOrFetch(
+    cacheKey,
+    getDynamicTop100SymbolsInternal,
+    CACHE_TTL.PORTFOLIO_RECOMMENDATIONS  // Cache for same duration as portfolio recommendations
+  );
+}
+
+/**
+ * Internal function to calculate dynamic top 100 symbols
+ */
+async function getDynamicTop100SymbolsInternal(): Promise<string[]> {
+  console.log(`Fetching momentum data for ${SP500_ALL_SYMBOLS.length} S&P500 stocks...`);
+  
+  // Fetch data for all S&P500 stocks
+  const stockDataMap = await fetchMultipleStocks(SP500_ALL_SYMBOLS, "6mo", "1d");
+  
+  // Calculate momentum for each stock
+  const stockMomentums: { symbol: string; momentum: number }[] = [];
+  
+  for (const [symbol, data] of Array.from(stockDataMap.entries())) {
+    if (data && data.prices.length >= 20) {
+      const momentum = calculateMomentum(data.prices);
+      stockMomentums.push({ symbol, momentum });
+    }
+  }
+  
+  // Sort by momentum (descending) and take top 100
+  stockMomentums.sort((a, b) => b.momentum - a.momentum);
+  const top100 = stockMomentums.slice(0, 100).map(s => s.symbol);
+  
+  console.log(`Selected top 100 stocks by momentum. Top 5: ${top100.slice(0, 5).join(', ')}`);
+  
+  return top100;
+}
+
 
 /**
  * Determine market regime based on signals

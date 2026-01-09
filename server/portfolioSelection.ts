@@ -15,6 +15,8 @@ import {
   calculateRisk,
   SEIHAI_SYMBOLS,
   DEFENSIVE_ETFS,
+  getDynamicTop100Symbols,
+  SP500_ALL_SYMBOLS,
 } from "./marketData";
 import { serverCache, CACHE_TTL, createCacheKey } from "./cache";
 
@@ -36,6 +38,12 @@ export interface PortfolioSelection {
 
 /**
  * Select aggressive portfolio holdings based on Seihai methodology (内部関数)
+ * 
+ * 動的選定モード:
+ * 1. S&P500全銘柄（497銘柄）から6か月モメンタムを計算
+ * 2. モメンタム上位100銘柄を動的に選定
+ * 3. その中からさらに上位5銘柄を最終選定
+ * 4. リスク逆数ウェイトで配分
  */
 async function selectAggressivePortfolioInternal(
   regime: "bull" | "bear" | "neutral",
@@ -62,8 +70,11 @@ async function selectAggressivePortfolioInternal(
     }
   }
 
-  // Fetch data for Seihai universe stocks
-  const symbolsToFetch = SEIHAI_SYMBOLS.slice(0, maxSymbols);
+  // 動的選定: S&P500全銘柄から6か月モメンタム上位100銘柄を取得
+  const top100Symbols = await getDynamicTop100Symbols();
+  
+  // Fetch data for top 100 stocks
+  const symbolsToFetch = top100Symbols.slice(0, maxSymbols);
   const stockDataPromises = symbolsToFetch.map(symbol => 
     fetchStockChart(symbol, "6mo", "1d")
   );
