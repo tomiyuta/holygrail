@@ -150,5 +150,5 @@
 - [x] GitHub ActionsのCI/CDワークフローを作成
 - [x] PRテンプレート、Issueテンプレートを追加
 - [x] CONTRIBUTING.mdを追加
-- [ ] GitHubリポジトリを作成
-- [ ] コードをプッシュ
+- [x] GitHubリポジトリを作成
+- [x] コードをプッシュ
