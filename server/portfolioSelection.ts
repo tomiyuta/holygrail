@@ -34,6 +34,12 @@ export interface PortfolioSelection {
   holdings: PortfolioHolding[];
   totalHoldings: number;
   calculatedAt: Date;
+  /** フォールバックデータを使用しているかどうか */
+  usingFallback?: boolean;
+  /** フォールバックで追加された銘柄数 */
+  fallbackCount?: number;
+  /** フォールバックの理由 */
+  fallbackReason?: string;
 }
 
 /**
@@ -108,9 +114,15 @@ async function selectAggressivePortfolioInternal(
 
   console.log(`[Aggressive] Successfully fetched ${stockMetrics.length} stocks with valid data`);
   
+  // Track fallback state
+  let usingFallback = false;
+  let fallbackCount = 0;
+  const originalCount = stockMetrics.length;
+  
   // If we don't have enough stocks, use fallback defaults
   if (stockMetrics.length < targetHoldings) {
     console.log(`[Aggressive] Warning: Only ${stockMetrics.length} stocks available, using fallback defaults`);
+    usingFallback = true;
     
     // Fallback stock data (based on typical high-momentum S&P500 stocks)
     const fallbackStocks = [
@@ -131,6 +143,7 @@ async function selectAggressivePortfolioInternal(
     for (const fb of fallbackStocks) {
       if (!existingSymbols.has(fb.symbol) && stockMetrics.length < targetHoldings) {
         stockMetrics.push(fb);
+        fallbackCount++;
         console.log(`[Aggressive] Added fallback: ${fb.symbol}`);
       }
     }
@@ -166,6 +179,11 @@ async function selectAggressivePortfolioInternal(
     holdings,
     totalHoldings: holdings.length,
     calculatedAt: new Date(),
+    usingFallback,
+    fallbackCount,
+    fallbackReason: usingFallback 
+      ? `API制限により${originalCount}銘柄のみ取得。${fallbackCount}銘柄のフォールバックデータを使用。`
+      : undefined,
   };
 }
 
@@ -265,9 +283,15 @@ async function selectDefensivePortfolioInternal(
 
   console.log(`[Defensive] Successfully fetched ${etfMetrics.length} ETFs with valid data`);
   
+  // Track fallback state
+  let usingFallback = false;
+  let fallbackCount = 0;
+  const originalCount = etfMetrics.length;
+  
   // If we don't have enough ETFs, use fallback defaults
   if (etfMetrics.length < targetHoldings) {
     console.log(`[Defensive] Warning: Only ${etfMetrics.length} ETFs available, using fallback defaults`);
+    usingFallback = true;
     
     // Fallback ETF data (based on typical values)
     const fallbackETFs = [
@@ -285,6 +309,7 @@ async function selectDefensivePortfolioInternal(
     for (const fb of fallbackETFs) {
       if (!existingSymbols.has(fb.symbol) && etfMetrics.length < targetHoldings) {
         etfMetrics.push(fb);
+        fallbackCount++;
         console.log(`[Defensive] Added fallback: ${fb.symbol}`);
       }
     }
@@ -321,6 +346,11 @@ async function selectDefensivePortfolioInternal(
     holdings,
     totalHoldings: holdings.length,
     calculatedAt: new Date(),
+    usingFallback,
+    fallbackCount,
+    fallbackReason: usingFallback 
+      ? `API制限により${originalCount}ETFのみ取得。${fallbackCount}ETFのフォールバックデータを使用。`
+      : undefined,
   };
 }
 

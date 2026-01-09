@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Swords, Shield, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Swords, Shield, TrendingUp, TrendingDown, Loader2, AlertTriangle } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 
 interface Holding {
@@ -37,6 +37,11 @@ export function PortfolioList({ type, diversificationCount }: PortfolioListProps
     ? (isAggressive ? data.aggressive.holdings : data.defensive.holdings)
     : [];
 
+  // フォールバック状態を取得
+  const portfolioData = data ? (isAggressive ? data.aggressive : data.defensive) : null;
+  const usingFallback = portfolioData?.usingFallback ?? false;
+  const fallbackReason = portfolioData?.fallbackReason;
+
   if (isLoading) {
     return (
       <motion.div
@@ -73,6 +78,27 @@ export function PortfolioList({ type, diversificationCount }: PortfolioListProps
       animate={{ opacity: 1, y: 0 }}
       className="terminal-card"
     >
+      {/* Fallback Warning */}
+      {usingFallback && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-amber-500">
+                フォールバックデータを使用中
+              </p>
+              <p className="text-xs text-amber-500/80 mt-0.5">
+                {fallbackReason || 'API制限により一部の銘柄データが取得できませんでした。代替データを表示しています。'}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
