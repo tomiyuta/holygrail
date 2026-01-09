@@ -4,7 +4,7 @@
  * 
  * Selection Logic:
  * - Aggressive: Sort stocks by 6-month momentum (descending), risk-inverse weighting
- * - Defensive: Sort ETFs by 6-month momentum (descending), equal weighting
+ * - Defensive: Sort ETFs by 6-month momentum (descending), risk-inverse weighting
  * 
  * キャッシュ統合済み - ポートフォリオ推奨結果をキャッシュ
  */
@@ -157,7 +157,7 @@ export async function selectAggressivePortfolio(
  * 1. 14種類のETFユニバースから選定
  * 2. 6か月モメンタム降順でソート
  * 3. 上位5銘柄を選定
- * 4. 均等ウェイト配分
+ * 4. リスク逆数ウェイト配分（攻撃型と同じ）
  */
 async function selectDefensivePortfolioInternal(
   regime: "bull" | "bear" | "neutral"
@@ -202,23 +202,29 @@ async function selectDefensivePortfolioInternal(
   }
 
   // Sort by 6-month momentum (descending) - matching original Seihai logic
-  // This is the key change from the previous implementation (which sorted by risk ascending)
   etfMetrics.sort((a, b) => b.momentum - a.momentum);
   
   // Select top N ETFs
   const selectedETFs = etfMetrics.slice(0, targetHoldings);
 
-  // Equal weight allocation for defensive portfolio (original Seihai uses equal weights)
-  const equalWeight = 100 / selectedETFs.length;
+  // Calculate risk-inverse weights (original Seihai formula - same as aggressive)
+  // weight_i = (1/risk_i) / sum(1/risk_j) * 100
+  const totalInverseRisk = selectedETFs.reduce(
+    (sum, etf) => sum + (1 / etf.risk),
+    0
+  );
 
   const holdings: PortfolioHolding[] = selectedETFs.map(etf => ({
     symbol: etf.symbol,
     name: etf.name,
-    weight: equalWeight,
+    weight: ((1 / etf.risk) / totalInverseRisk) * 100,
     momentum: etf.momentum * 100,  // Convert to percentage for display
     volatility: etf.risk,
     category: etf.category,
   }));
+
+  // Sort by weight descending for display
+  holdings.sort((a, b) => b.weight - a.weight);
 
   return {
     type: "defensive",
