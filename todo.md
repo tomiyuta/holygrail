@@ -144,3 +144,11 @@
 - [x] README.mdを更新してドキュメントを整備
 - [x] LICENSEファイルを追加
 - [x] GitHubアップロードの準備完了
+
+## CI/CDパイプライン構築
+
+- [x] GitHub ActionsのCI/CDワークフローを作成
+- [x] PRテンプレート、Issueテンプレートを追加
+- [x] CONTRIBUTING.mdを追加
+- [ ] GitHubリポジトリを作成
+- [ ] コードをプッシュ
