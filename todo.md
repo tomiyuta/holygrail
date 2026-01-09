@@ -152,3 +152,9 @@
 - [x] CONTRIBUTING.mdを追加
 - [x] GitHubリポジトリを作成
 - [x] コードをプッシュ
+
+## GitHub Actionsワークフロー修正
+
+- [x] CIワークフローを修正（Secrets不要に）
+- [x] Deployワークフローを修正（手動トリガーのみ）
+- [ ] GitHubにプッシュして動作確認
