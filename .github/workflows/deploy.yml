@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent )" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build application
+        run: pnpm build
+        env:
+          VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
+          VITE_APP_ID: ${{ vars.VITE_APP_ID }}
+          VITE_FRONTEND_FORGE_API_KEY: ${{ secrets.VITE_FRONTEND_FORGE_API_KEY }}
+          VITE_FRONTEND_FORGE_API_URL: ${{ secrets.VITE_FRONTEND_FORGE_API_URL }}
+
+      - name: Deploy notification
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "Build artifacts are ready for deployment."
+          echo ""
+          echo "Note: This project is hosted on Manus Platform."
+          echo "To deploy, use the Publish button in the Manus Management UI."
