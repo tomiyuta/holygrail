@@ -3,9 +3,8 @@
  * Implements the original Seihai (Holy Grail) portfolio selection logic
  * 
  * Selection Logic:
- * 1. Sort stocks by 6-month momentum (descending)
- * 2. Select top N stocks based on regime
- * 3. Calculate weights using risk-inverse weighting (1/risk)
+ * - Aggressive: Sort stocks by 6-month momentum (descending), risk-inverse weighting
+ * - Defensive: Sort ETFs by 6-month momentum (descending), equal weighting
  * 
  * キャッシュ統合済み - ポートフォリオ推奨結果をキャッシュ
  */
@@ -152,24 +151,19 @@ export async function selectAggressivePortfolio(
 }
 
 /**
- * Select defensive portfolio holdings based on low volatility (内部関数)
+ * Select defensive portfolio holdings based on Seihai methodology (内部関数)
+ * 
+ * 元の聖杯ロジック:
+ * 1. 14種類のETFユニバースから選定
+ * 2. 6か月モメンタム降順でソート
+ * 3. 上位5銘柄を選定
+ * 4. 均等ウェイト配分
  */
 async function selectDefensivePortfolioInternal(
   regime: "bull" | "bear" | "neutral"
 ): Promise<PortfolioSelection> {
-  // Determine number of holdings based on regime
-  let targetHoldings: number;
-  switch (regime) {
-    case "bull":
-      targetHoldings = 7;
-      break;
-    case "bear":
-      targetHoldings = 3;
-      break;
-    case "neutral":
-    default:
-      targetHoldings = 5;
-  }
+  // Original Seihai defensive uses 5 ETFs as default (Top5)
+  const targetHoldings = 5;
 
   // Fetch data for defensive ETFs
   const etfDataPromises = DEFENSIVE_ETFS.map(etf =>
@@ -178,11 +172,12 @@ async function selectDefensivePortfolioInternal(
 
   const etfDataResults = await Promise.all(etfDataPromises);
 
-  // Calculate risk for each ETF
+  // Calculate momentum and risk for each ETF
   const etfMetrics: {
     symbol: string;
     name: string;
     category: string;
+    momentum: number;  // 6-month return as decimal
     risk: number;
   }[] = [];
 
@@ -191,6 +186,7 @@ async function selectDefensivePortfolioInternal(
     const etfInfo = DEFENSIVE_ETFS[i];
     
     if (data && data.prices.length >= 20) {
+      const momentum = calculateMomentum(data.prices);
       const risk = calculateRisk(data.prices);
       
       if (risk > 0) {
@@ -198,23 +194,28 @@ async function selectDefensivePortfolioInternal(
           symbol: etfInfo.symbol,
           name: etfInfo.name,
           category: etfInfo.category,
+          momentum,
           risk,
         });
       }
     }
   }
 
-  // Sort by risk (ascending) and select lowest N
-  etfMetrics.sort((a, b) => a.risk - b.risk);
+  // Sort by 6-month momentum (descending) - matching original Seihai logic
+  // This is the key change from the previous implementation (which sorted by risk ascending)
+  etfMetrics.sort((a, b) => b.momentum - a.momentum);
+  
+  // Select top N ETFs
   const selectedETFs = etfMetrics.slice(0, targetHoldings);
 
-  // Equal weight allocation for defensive portfolio
+  // Equal weight allocation for defensive portfolio (original Seihai uses equal weights)
   const equalWeight = 100 / selectedETFs.length;
 
   const holdings: PortfolioHolding[] = selectedETFs.map(etf => ({
     symbol: etf.symbol,
     name: etf.name,
     weight: equalWeight,
+    momentum: etf.momentum * 100,  // Convert to percentage for display
     volatility: etf.risk,
     category: etf.category,
   }));
@@ -228,7 +229,7 @@ async function selectDefensivePortfolioInternal(
 }
 
 /**
- * Select defensive portfolio holdings based on low volatility (キャッシュ付き)
+ * Select defensive portfolio holdings based on Seihai methodology (キャッシュ付き)
  */
 export async function selectDefensivePortfolio(
   regime: "bull" | "bear" | "neutral"
