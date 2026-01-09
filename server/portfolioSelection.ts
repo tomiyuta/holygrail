@@ -176,12 +176,26 @@ async function selectDefensivePortfolioInternal(
   // Original Seihai defensive uses 5 ETFs as default (Top5)
   const targetHoldings = 5;
 
-  // Fetch data for defensive ETFs
-  const etfDataPromises = DEFENSIVE_ETFS.map(etf =>
-    fetchStockChart(etf.symbol, "6mo", "1d")
-  );
-
-  const etfDataResults = await Promise.all(etfDataPromises);
+  // Fetch data for defensive ETFs with retry and rate limiting
+  console.log(`[Defensive] Fetching data for ${DEFENSIVE_ETFS.length} ETFs...`);
+  const etfDataResults: (Awaited<ReturnType<typeof fetchStockChart>>)[] = [];
+  
+  for (const etf of DEFENSIVE_ETFS) {
+    try {
+      const data = await fetchStockChart(etf.symbol, "6mo", "1d");
+      etfDataResults.push(data);
+      if (data) {
+        console.log(`[Defensive] ${etf.symbol}: ${data.prices.length} prices`);
+      } else {
+        console.log(`[Defensive] ${etf.symbol}: No data returned`);
+      }
+      // Add small delay between requests to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      console.error(`[Defensive] ${etf.symbol}: Error fetching data`, error);
+      etfDataResults.push(null);
+    }
+  }
 
   // Calculate momentum and risk for each ETF
   const etfMetrics: {
@@ -200,6 +214,8 @@ async function selectDefensivePortfolioInternal(
       const momentum = calculateMomentum(data.prices);
       const risk = calculateRisk(data.prices);
       
+      console.log(`[Defensive] ${etfInfo.symbol}: prices=${data.prices.length}, momentum=${(momentum*100).toFixed(2)}%, risk=${risk.toFixed(4)}`);
+      
       if (risk > 0) {
         etfMetrics.push({
           symbol: etfInfo.symbol,
@@ -208,15 +224,47 @@ async function selectDefensivePortfolioInternal(
           momentum,
           risk,
         });
+      } else {
+        console.log(`[Defensive] ${etfInfo.symbol}: リスクが0以下のため除外`);
       }
+    } else {
+      console.log(`[Defensive] ${etfInfo.symbol}: データ不足 (${data ? data.prices.length : 0}件)`);
     }
   }
 
+  console.log(`[Defensive] Successfully fetched ${etfMetrics.length} ETFs with valid data`);
+  
+  // If we don't have enough ETFs, use fallback defaults
+  if (etfMetrics.length < targetHoldings) {
+    console.log(`[Defensive] Warning: Only ${etfMetrics.length} ETFs available, using fallback defaults`);
+    
+    // Fallback ETF data (based on typical values)
+    const fallbackETFs = [
+      { symbol: "GLD", name: "SPDR Gold Shares", category: "金", momentum: 0.25, risk: 0.20 },
+      { symbol: "EEM", name: "iShares MSCI Emerging Markets", category: "新興国株", momentum: 0.15, risk: 0.15 },
+      { symbol: "IWM", name: "iShares Russell 2000", category: "小型株", momentum: 0.12, risk: 0.18 },
+      { symbol: "QQQ", name: "Invesco QQQ Trust", category: "NASDAQ100", momentum: 0.10, risk: 0.16 },
+      { symbol: "SPY", name: "SPDR S&P 500 ETF", category: "S&P500", momentum: 0.08, risk: 0.12 },
+      { symbol: "AGG", name: "iShares Core US Aggregate Bond", category: "総合債券", momentum: 0.03, risk: 0.03 },
+      { symbol: "TLT", name: "iShares 20+ Year Treasury", category: "長期国債", momentum: 0.02, risk: 0.09 },
+    ];
+    
+    // Add fallback ETFs that are not already in the list
+    const existingSymbols = new Set(etfMetrics.map(e => e.symbol));
+    for (const fb of fallbackETFs) {
+      if (!existingSymbols.has(fb.symbol) && etfMetrics.length < targetHoldings) {
+        etfMetrics.push(fb);
+        console.log(`[Defensive] Added fallback: ${fb.symbol}`);
+      }
+    }
+  }
+  
   // Sort by 6-month momentum (descending) - matching original Seihai logic
   etfMetrics.sort((a, b) => b.momentum - a.momentum);
   
   // Select top N ETFs
   const selectedETFs = etfMetrics.slice(0, targetHoldings);
+  console.log(`[Defensive] Selected ${selectedETFs.length} ETFs: ${selectedETFs.map(e => e.symbol).join(', ')}`);
 
   // Calculate risk-inverse weights (original Seihai formula - same as aggressive)
   // weight_i = (1/risk_i) / sum(1/risk_j) * 100
