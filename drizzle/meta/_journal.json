@@ -15,6 +15,13 @@
       "when": 1767788289406,
       "tag": "0001_whole_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767938828004,
+      "tag": "0002_fixed_captain_cross",
+      "breakpoints": true
     }
   ]
 }

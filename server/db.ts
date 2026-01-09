@@ -9,6 +9,8 @@ import {
   InsertPortfolioRecommendation,
   alertSubscriptions,
   InsertAlertSubscription,
+  dataUpdateHistory,
+  InsertDataUpdateHistory,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -276,5 +278,77 @@ export async function updateLastNotifiedRegime(
   } catch (error) {
     console.error("[Database] Failed to update last notified regime:", error);
     throw error;
+  }
+}
+
+
+// Data Update History Functions
+
+export async function saveDataUpdateHistory(
+  data: Omit<InsertDataUpdateHistory, "id" | "createdAt">
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save data update history: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(dataUpdateHistory).values(data);
+  } catch (error) {
+    console.error("[Database] Failed to save data update history:", error);
+    throw error;
+  }
+}
+
+export async function getDataUpdateHistory(limit: number = 20) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get data update history: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(dataUpdateHistory)
+      .orderBy(desc(dataUpdateHistory.createdAt))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get data update history:", error);
+    return [];
+  }
+}
+
+export async function getLatestDataUpdate(updateType?: "signals" | "portfolio" | "all") {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get latest data update: database not available");
+    return null;
+  }
+
+  try {
+    let result;
+    
+    if (updateType) {
+      result = await db
+        .select()
+        .from(dataUpdateHistory)
+        .where(eq(dataUpdateHistory.updateType, updateType))
+        .orderBy(desc(dataUpdateHistory.createdAt))
+        .limit(1);
+    } else {
+      result = await db
+        .select()
+        .from(dataUpdateHistory)
+        .orderBy(desc(dataUpdateHistory.createdAt))
+        .limit(1);
+    }
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to get latest data update:", error);
+    return null;
   }
 }

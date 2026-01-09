@@ -113,3 +113,38 @@ export const alertSubscriptions = mysqlTable("alert_subscriptions", {
 
 export type AlertSubscription = typeof alertSubscriptions.$inferSelect;
 export type InsertAlertSubscription = typeof alertSubscriptions.$inferInsert;
+
+
+/**
+ * Data update history table - tracks when data was refreshed
+ */
+export const dataUpdateHistory = mysqlTable("data_update_history", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Type of update: signals, portfolio, or all */
+  updateType: mysqlEnum("updateType", ["signals", "portfolio", "all"]).notNull(),
+  /** Whether the update was successful */
+  success: int("success").default(1).notNull(),
+  /** Whether fallback data was used */
+  usedFallback: int("usedFallback").default(0).notNull(),
+  /** Number of fallback items used (if any) */
+  fallbackCount: int("fallbackCount").default(0),
+  /** Reason for fallback (if any) */
+  fallbackReason: text("fallbackReason"),
+  /** Market regime at the time of update (for signals) */
+  regime: mysqlEnum("regime", ["bull", "bear", "neutral"]),
+  /** Japanese regime name */
+  regimeJapanese: varchar("regimeJapanese", { length: 20 }),
+  /** Number of holdings updated (for portfolio) */
+  holdingsCount: int("holdingsCount"),
+  /** Source of the update: manual, scheduled, or system */
+  source: mysqlEnum("source", ["manual", "scheduled", "system"]).default("manual").notNull(),
+  /** Duration of the update in milliseconds */
+  durationMs: int("durationMs"),
+  /** Error message if update failed */
+  errorMessage: text("errorMessage"),
+  /** Timestamp when the update was performed */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DataUpdateHistory = typeof dataUpdateHistory.$inferSelect;
+export type InsertDataUpdateHistory = typeof dataUpdateHistory.$inferInsert;

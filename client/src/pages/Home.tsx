@@ -16,6 +16,7 @@ import { SignalCard } from '@/components/SignalCard';
 import { AllocationCard } from '@/components/AllocationCard';
 import { StatsCard } from '@/components/StatsCard';
 import { RulesCard } from '@/components/RulesCard';
+import { UpdateHistory } from '@/components/UpdateHistory';
 
 export default function Home() {
   const { analysis, loading, error, refresh, forceRefresh, isRefreshing } = useMarketSignals();
@@ -207,6 +208,11 @@ export default function Home() {
           {/* Rules Card */}
           <div className="col-span-12 lg:col-span-4">
             <RulesCard />
+          </div>
+
+          {/* Update History */}
+          <div className="col-span-12">
+            <UpdateHistory />
           </div>
         </div>
 
